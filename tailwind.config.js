@@ -6,8 +6,9 @@ export default {
       colors: {
         // Identidad visual VOOJ
         vooj: {
-          black: '#0A0A0A', // fondo negro puro
-          bone: '#F5F0E8',  // texto / acento hueso
+          black: '#0A0A0A', // sello de marca: fondo del logo (NO se invierte)
+          bone: '#F5F0E8',  // superficie clara del sitio + texto del logo
+          ink: '#161514',   // texto oscuro sobre fondo claro (casi negro)
         },
       },
       fontFamily: {

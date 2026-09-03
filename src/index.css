@@ -8,41 +8,43 @@
     -moz-osx-font-smoothing: grayscale;
   }
 
+  /* Paleta invertida: superficie clara (hueso), texto oscuro (tinta). */
   body {
-    @apply bg-vooj-black text-vooj-bone font-sans font-light;
+    @apply bg-vooj-bone text-vooj-ink font-sans font-light;
   }
 }
 
 @layer components {
-  /* Wordmark VOOJ: mayúsculas, tracking amplio */
+  /* Wordmark como TIPOGRAFÍA de encabezado (títulos de página).
+     El logo de marca NO usa esto — usa <VoojBadge>. */
   .vooj-wordmark {
-    @apply font-sans font-medium uppercase tracking-wordmark text-vooj-bone;
+    @apply font-sans font-medium uppercase tracking-wordmark text-vooj-ink;
   }
 
-  /* Etiqueta de apoyo (tagline, navegación) */
+  /* Etiqueta de apoyo (tagline, navegación, labels) */
   .vooj-eyebrow {
-    @apply font-sans font-light uppercase tracking-wide2 text-vooj-bone/70 text-xs;
+    @apply font-sans font-light uppercase tracking-wide2 text-vooj-ink/70 text-xs;
   }
 
   /* Formularios del panel admin */
   .vooj-label {
-    @apply block vooj-eyebrow text-vooj-bone/50 mb-1.5;
+    @apply block vooj-eyebrow text-vooj-ink/60 mb-1.5;
   }
 
   .vooj-input {
-    @apply w-full bg-transparent border border-vooj-bone/20 px-3 py-2 text-sm text-vooj-bone
-      placeholder:text-vooj-bone/30 focus:outline-none focus:border-vooj-bone/50
+    @apply w-full bg-transparent border border-vooj-ink/25 px-3 py-2 text-sm text-vooj-ink
+      placeholder:text-vooj-ink/35 focus:outline-none focus:border-vooj-ink/60
       disabled:opacity-40;
   }
 
   .vooj-btn {
-    @apply vooj-eyebrow border border-vooj-bone/40 px-4 py-2.5 text-vooj-bone/80
-      transition-colors hover:bg-vooj-bone hover:text-vooj-black
+    @apply vooj-eyebrow border border-vooj-ink/50 px-4 py-2.5 text-vooj-ink
+      transition-colors hover:bg-vooj-ink hover:text-vooj-bone
       disabled:opacity-40 disabled:cursor-not-allowed
-      disabled:hover:bg-transparent disabled:hover:text-vooj-bone/80;
+      disabled:hover:bg-transparent disabled:hover:text-vooj-ink;
   }
 
   .vooj-btn-plain {
-    @apply vooj-eyebrow px-3 py-2 text-vooj-bone/50 transition-colors hover:text-vooj-bone;
+    @apply vooj-eyebrow px-3 py-2 text-vooj-ink/60 transition-colors hover:text-vooj-ink;
   }
 }

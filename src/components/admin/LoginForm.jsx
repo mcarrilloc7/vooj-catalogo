@@ -56,7 +56,7 @@ export default function LoginForm() {
         </div>
 
         {error && (
-          <p className="text-xs text-red-300/80 tracking-wide2">{error}</p>
+          <p className="text-xs text-red-700 tracking-wide2">{error}</p>
         )}
 
         <button type="submit" disabled={enviando} className="vooj-btn mt-2">
@@ -64,7 +64,7 @@ export default function LoginForm() {
         </button>
       </form>
 
-      <p className="mt-8 text-center text-[0.7rem] text-vooj-bone/30 tracking-wide2 leading-relaxed">
+      <p className="mt-8 text-center text-[0.7rem] text-vooj-ink/45 tracking-wide2 leading-relaxed">
         Acceso solo para el equipo VOOJ. Las cuentas se crean manualmente.
       </p>
     </PantallaCentrada>

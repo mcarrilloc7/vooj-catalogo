@@ -90,13 +90,13 @@ export default function ProductosAdmin() {
     <div className="space-y-10">
       <header className="flex items-baseline justify-between">
         <h1 className="vooj-wordmark text-2xl sm:text-3xl">Productos</h1>
-        <span className="vooj-eyebrow text-vooj-bone/40">
+        <span className="vooj-eyebrow text-vooj-ink/55">
           {estado === 'ok' ? `${productos.length} en total` : ''}
         </span>
       </header>
 
       {aviso && (
-        <p className="vooj-eyebrow text-vooj-bone/60 border-l border-vooj-bone/30 pl-3">
+        <p className="vooj-eyebrow text-vooj-ink/70 border-l border-vooj-ink/30 pl-3">
           {aviso}
         </p>
       )}
@@ -111,12 +111,12 @@ export default function ProductosAdmin() {
 
       <section>
         {estado === 'cargando' && (
-          <p className="vooj-eyebrow text-vooj-bone/40 py-8">Cargando productos…</p>
+          <p className="vooj-eyebrow text-vooj-ink/55 py-8">Cargando productos…</p>
         )}
 
         {estado === 'error' && (
           <div className="py-8">
-            <p className="vooj-eyebrow text-vooj-bone/60">
+            <p className="vooj-eyebrow text-vooj-ink/70">
               No pudimos cargar los productos.
             </p>
             <button onClick={recargar} className="vooj-btn mt-4">
@@ -126,7 +126,7 @@ export default function ProductosAdmin() {
         )}
 
         {estado === 'ok' && productos.length === 0 && (
-          <p className="vooj-eyebrow text-vooj-bone/40 py-8">
+          <p className="vooj-eyebrow text-vooj-ink/55 py-8">
             Aún no hay productos. Crea el primero con el formulario de arriba.
           </p>
         )}
@@ -135,35 +135,35 @@ export default function ProductosAdmin() {
           <div className="overflow-x-auto">
             <table className="w-full text-sm border-collapse">
               <thead>
-                <tr className="border-b border-vooj-bone/15 text-left">
-                  <th className="py-3 pr-4 vooj-eyebrow text-vooj-bone/40 font-light">Nombre</th>
-                  <th className="py-3 pr-4 vooj-eyebrow text-vooj-bone/40 font-light">Categoría</th>
-                  <th className="py-3 pr-4 vooj-eyebrow text-vooj-bone/40 font-light">Precio</th>
-                  <th className="py-3 pr-4 vooj-eyebrow text-vooj-bone/40 font-light">Talla</th>
-                  <th className="py-3 pr-4 vooj-eyebrow text-vooj-bone/40 font-light">Exist.</th>
-                  <th className="py-3 pr-4 vooj-eyebrow text-vooj-bone/40 font-light">Fotos</th>
-                  <th className="py-3 pr-4 vooj-eyebrow text-vooj-bone/40 font-light">Estado</th>
-                  <th className="py-3 vooj-eyebrow text-vooj-bone/40 font-light text-right">Acciones</th>
+                <tr className="border-b border-vooj-ink/20 text-left">
+                  <th className="py-3 pr-4 vooj-eyebrow text-vooj-ink/55 font-light">Nombre</th>
+                  <th className="py-3 pr-4 vooj-eyebrow text-vooj-ink/55 font-light">Categoría</th>
+                  <th className="py-3 pr-4 vooj-eyebrow text-vooj-ink/55 font-light">Precio</th>
+                  <th className="py-3 pr-4 vooj-eyebrow text-vooj-ink/55 font-light">Talla</th>
+                  <th className="py-3 pr-4 vooj-eyebrow text-vooj-ink/55 font-light">Exist.</th>
+                  <th className="py-3 pr-4 vooj-eyebrow text-vooj-ink/55 font-light">Fotos</th>
+                  <th className="py-3 pr-4 vooj-eyebrow text-vooj-ink/55 font-light">Estado</th>
+                  <th className="py-3 vooj-eyebrow text-vooj-ink/55 font-light text-right">Acciones</th>
                 </tr>
               </thead>
               <tbody>
                 {productos.map((p) => (
                   <tr
                     key={p.id}
-                    className={`border-b border-vooj-bone/10 ${
-                      editando?.id === p.id ? 'bg-vooj-bone/[0.04]' : ''
+                    className={`border-b border-vooj-ink/12 ${
+                      editando?.id === p.id ? 'bg-vooj-ink/[0.05]' : ''
                     }`}
                   >
-                    <td className="py-3 pr-4 text-vooj-bone/90">{p.nombre}</td>
-                    <td className="py-3 pr-4 text-vooj-bone/60">{p.categoria}</td>
-                    <td className="py-3 pr-4 text-vooj-bone/60">{formatPrecioMXN(p.precio)}</td>
-                    <td className="py-3 pr-4 text-vooj-bone/60">{p.talla || '—'}</td>
-                    <td className="py-3 pr-4 text-vooj-bone/60">{p.existencias}</td>
-                    <td className="py-3 pr-4 text-vooj-bone/60">{p.fotos?.length || 0}</td>
+                    <td className="py-3 pr-4 text-vooj-ink/90">{p.nombre}</td>
+                    <td className="py-3 pr-4 text-vooj-ink/70">{p.categoria}</td>
+                    <td className="py-3 pr-4 text-vooj-ink/70">{formatPrecioMXN(p.precio)}</td>
+                    <td className="py-3 pr-4 text-vooj-ink/70">{p.talla || '—'}</td>
+                    <td className="py-3 pr-4 text-vooj-ink/70">{p.existencias}</td>
+                    <td className="py-3 pr-4 text-vooj-ink/70">{p.fotos?.length || 0}</td>
                     <td className="py-3 pr-4">
                       <span
                         className={`vooj-eyebrow ${
-                          p.disponible ? 'text-vooj-bone/70' : 'text-vooj-bone/30'
+                          p.disponible ? 'text-vooj-ink/75' : 'text-vooj-ink/40'
                         }`}
                       >
                         {p.disponible ? 'Visible' : 'Oculto'}
@@ -182,7 +182,7 @@ export default function ProductosAdmin() {
                       </button>
                       <button
                         onClick={() => handleEliminar(p)}
-                        className="vooj-btn-plain hover:text-red-300"
+                        className="vooj-btn-plain hover:text-red-600"
                       >
                         Eliminar
                       </button>

@@ -27,7 +27,7 @@ function desdeProducto(p) {
 
 function Miniatura({ src, onQuitar }) {
   return (
-    <div className="relative aspect-[3/4] border border-vooj-bone/15 overflow-hidden bg-vooj-black">
+    <div className="relative aspect-[3/4] border border-vooj-ink/20 overflow-hidden bg-vooj-black">
       <img src={src} alt="" className="h-full w-full object-cover" />
       <button
         type="button"
@@ -164,9 +164,9 @@ export default function ProductoForm({ inicial, onGuardar, onCancelar, guardando
   return (
     <form
       onSubmit={onSubmit}
-      className="border border-vooj-bone/10 p-6 grid gap-4 sm:grid-cols-2"
+      className="border border-vooj-ink/15 p-6 grid gap-4 sm:grid-cols-2"
     >
-      <p className="sm:col-span-2 vooj-eyebrow text-vooj-bone/70">
+      <p className="sm:col-span-2 vooj-eyebrow text-vooj-ink/75">
         {editando ? `Editando: ${inicial.nombre}` : 'Nuevo producto'}
       </p>
 
@@ -242,11 +242,11 @@ export default function ProductoForm({ inicial, onGuardar, onCancelar, guardando
       <label className="sm:col-span-2 flex items-center gap-3 cursor-pointer select-none">
         <input
           type="checkbox"
-          className="h-4 w-4 accent-vooj-bone"
+          className="h-4 w-4 accent-vooj-ink"
           checked={form.disponible}
           onChange={(e) => set('disponible', e.target.checked)}
         />
-        <span className="vooj-eyebrow text-vooj-bone/60">
+        <span className="vooj-eyebrow text-vooj-ink/70">
           Disponible en el catálogo público
         </span>
       </label>
@@ -280,18 +280,18 @@ export default function ProductoForm({ inicial, onGuardar, onCancelar, guardando
           multiple
           onChange={agregarArchivos}
           disabled={ocupado}
-          className="block w-full text-xs text-vooj-bone/50
-            file:mr-3 file:border file:border-vooj-bone/30 file:bg-transparent
-            file:px-3 file:py-2 file:text-vooj-bone/70 file:vooj-eyebrow
-            hover:file:bg-vooj-bone hover:file:text-vooj-black file:transition-colors"
+          className="block w-full text-xs text-vooj-ink/60
+            file:mr-3 file:border file:border-vooj-ink/30 file:bg-transparent
+            file:px-3 file:py-2 file:text-vooj-ink/75 file:vooj-eyebrow
+            hover:file:bg-vooj-ink hover:file:text-vooj-bone file:transition-colors"
         />
-        <p className="mt-1.5 text-[0.7rem] text-vooj-bone/30 tracking-wide2">
+        <p className="mt-1.5 text-[0.7rem] text-vooj-ink/45 tracking-wide2">
           JPG o PNG · máx 5 MB cada una · se suben al guardar
         </p>
       </div>
 
       {error && (
-        <p className="sm:col-span-2 text-xs text-red-300/80 tracking-wide2">
+        <p className="sm:col-span-2 text-xs text-red-700 tracking-wide2">
           {error}
         </p>
       )}

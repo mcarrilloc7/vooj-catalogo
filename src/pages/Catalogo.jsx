@@ -10,9 +10,9 @@ function CatalogoSkeleton() {
     <div className={GRID} aria-hidden="true">
       {Array.from({ length: 8 }).map((_, i) => (
         <div key={i} className="animate-pulse">
-          <div className="aspect-[3/4] bg-vooj-bone/[0.06]" />
-          <div className="mt-3 h-3 w-2/3 bg-vooj-bone/[0.06]" />
-          <div className="mt-2 h-3 w-1/3 bg-vooj-bone/[0.06]" />
+          <div className="aspect-[3/4] bg-vooj-ink/[0.08]" />
+          <div className="mt-3 h-3 w-2/3 bg-vooj-ink/[0.08]" />
+          <div className="mt-2 h-3 w-1/3 bg-vooj-ink/[0.08]" />
         </div>
       ))}
     </div>
@@ -22,10 +22,10 @@ function CatalogoSkeleton() {
 function EstadoVacio() {
   return (
     <div className="py-24 text-center">
-      <p className="vooj-wordmark text-lg text-vooj-bone/70">
+      <p className="vooj-wordmark text-lg text-vooj-ink/80">
         Colección en preparación
       </p>
-      <p className="mt-4 vooj-eyebrow text-vooj-bone/40">
+      <p className="mt-4 vooj-eyebrow text-vooj-ink/55">
         Muy pronto vas a poder ver aquí nuestras piezas.
       </p>
     </div>
@@ -35,16 +35,13 @@ function EstadoVacio() {
 function EstadoError({ onReintentar }) {
   return (
     <div className="py-24 text-center">
-      <p className="vooj-wordmark text-lg text-vooj-bone/70">
+      <p className="vooj-wordmark text-lg text-vooj-ink/80">
         No pudimos cargar el catálogo
       </p>
-      <p className="mt-4 vooj-eyebrow text-vooj-bone/40">
+      <p className="mt-4 vooj-eyebrow text-vooj-ink/55">
         Revisa tu conexión e inténtalo de nuevo en un momento.
       </p>
-      <button
-        onClick={onReintentar}
-        className="mt-8 border border-vooj-bone/40 px-6 py-3 vooj-eyebrow text-vooj-bone/80 transition-colors hover:bg-vooj-bone hover:text-vooj-black"
-      >
+      <button onClick={onReintentar} className="mt-8 vooj-btn">
         Reintentar
       </button>
     </div>

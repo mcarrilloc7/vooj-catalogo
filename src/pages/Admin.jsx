@@ -9,7 +9,7 @@ export default function Admin() {
   if (cargando) {
     return (
       <PantallaCentrada>
-        <p className="vooj-eyebrow text-vooj-bone/40">Cargando…</p>
+        <p className="vooj-eyebrow text-vooj-ink/50">Cargando…</p>
       </PantallaCentrada>
     )
   }
@@ -20,10 +20,10 @@ export default function Admin() {
   if (!perfil) {
     return (
       <PantallaCentrada>
-        <p className="text-sm text-vooj-bone/70 text-center leading-relaxed">
+        <p className="text-sm text-vooj-ink/75 text-center leading-relaxed">
           Tu cuenta no tiene un perfil asignado en VOOJ.
         </p>
-        <p className="mt-3 text-center text-[0.7rem] text-vooj-bone/30 tracking-wide2 leading-relaxed">
+        <p className="mt-3 text-center text-[0.7rem] text-vooj-ink/45 tracking-wide2 leading-relaxed">
           Pídele a la administradora que te dé acceso.
         </p>
         <button onClick={signOut} className="vooj-btn mt-8">
