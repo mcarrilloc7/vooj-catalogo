@@ -22,7 +22,7 @@ export default function Layout() {
       <header className="relative border-b border-vooj-ink/15">
         <div className="mx-auto max-w-6xl px-6 h-16 flex items-center justify-between">
           <Link to="/" onClick={() => setAbierto(false)} aria-label="VOOJ — inicio">
-            <VoojBadge className="h-12 w-12" />
+            <VoojBadge variant="mark" className="h-11 w-11" />
           </Link>
 
           {/* Navegación en desktop */}

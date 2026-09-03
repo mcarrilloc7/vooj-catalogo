@@ -1,22 +1,25 @@
 /**
- * Logo VOOJ — imagen real (/logo-vooj.jpg).
+ * Logo VOOJ como imagen. Dos variantes, ambas con fondo negro sólido propio
+ * (no se envuelven en otro contenedor negro):
  *
- * El archivo ya trae su propio fondo negro sólido y el lockup completo
- * (wordmark + "Boutique de moda"), así que se usa tal cual, sin envolverlo
- * en otro contenedor negro. El `bg-vooj-black` solo cubre el instante de
- * carga y el letterbox de object-contain (invisible: mismo negro).
+ *  - variant="full" (default): /logo-vooj.jpg — lockup completo
+ *    (wordmark + "Boutique de moda"). Para donde hay espacio: home,
+ *    login, tarjeta sin foto del catálogo.
+ *  - variant="mark": /logo-vooj-mark.png — sólo el monograma (los anillos
+ *    de la "OO"), sin tagline. Para espacios chicos: headers (~48px) y favicon.
  *
- * El tamaño se controla con `className` en cada lugar de uso
- * (ej. "h-10 w-10" en el header, "w-full max-w-[440px]" en la home).
+ * El tamaño se controla con `className` en cada lugar de uso.
  */
 export default function VoojBadge({
+  variant = 'full',
   className = '',
   alt = 'VOOJ — Boutique de moda',
   ...props
 }) {
+  const src = variant === 'mark' ? '/logo-vooj-mark.png' : '/logo-vooj.jpg'
   return (
     <img
-      src="/logo-vooj.jpg"
+      src={src}
       alt={alt}
       draggable={false}
       className={`block select-none object-contain bg-vooj-black ${className}`}
