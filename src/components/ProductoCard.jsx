@@ -1,15 +1,11 @@
 import { useState } from 'react'
 import { formatPrecioMXN, primeraFoto } from '../lib/format.js'
+import VoojBadge from './VoojBadge.jsx'
 
-// Sin foto: mosaico oscuro con el sello VOOJ (el logo no se invierte).
+// Sin foto: el logo VOOJ ocupa la tarjeta (su fondo negro ya hace de mosaico).
+// alt="" porque es decorativo: el nombre del producto va justo debajo.
 function FotoPlaceholder() {
-  return (
-    <div className="absolute inset-0 flex items-center justify-center bg-vooj-black">
-      <span className="font-sans font-medium uppercase tracking-wordmark text-vooj-bone/25 text-2xl -mr-[0.35em] select-none">
-        VOOJ
-      </span>
-    </div>
-  )
+  return <VoojBadge alt="" className="absolute inset-0 h-full w-full" />
 }
 
 export default function ProductoCard({ producto }) {

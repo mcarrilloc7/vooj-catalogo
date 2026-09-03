@@ -11,7 +11,7 @@ export default function AdminPanel() {
       <header className="border-b border-vooj-ink/15">
         <div className="mx-auto max-w-5xl w-full px-6 h-16 flex items-center justify-between gap-4">
           <Link to="/" aria-label="VOOJ — inicio">
-            <VoojBadge className="text-base px-3 py-1.5" />
+            <VoojBadge className="h-12 w-12" />
           </Link>
           <div className="flex items-center gap-4">
             <span className="vooj-eyebrow text-vooj-ink/70 normal-case sm:uppercase">

@@ -10,15 +10,11 @@ const enlaces = [
 export default function Home() {
   return (
     <div className="min-h-screen bg-vooj-bone text-vooj-ink flex flex-col items-center justify-center px-6">
-      <VoojBadge className="text-5xl sm:text-7xl md:text-8xl px-6 py-4 sm:px-8 sm:py-5" />
+      {/* El logo ya incluye el lockup completo con "Boutique de moda",
+          por eso no se repite como texto aquí. */}
+      <VoojBadge className="w-full max-w-[380px] sm:max-w-[460px]" />
 
-      <div className="mt-8 h-px w-40 bg-vooj-ink/25" />
-
-      <p className="mt-6 vooj-eyebrow text-sm tracking-wordmark text-vooj-ink/70">
-        Boutique de moda
-      </p>
-
-      <nav className="mt-16 flex flex-wrap justify-center gap-8">
+      <nav className="mt-10 flex flex-wrap justify-center gap-8">
         {enlaces.map((e) => (
           <Link
             key={e.to}
