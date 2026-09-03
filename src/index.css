@@ -1,0 +1,48 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    @apply bg-vooj-black text-vooj-bone font-sans font-light;
+  }
+}
+
+@layer components {
+  /* Wordmark VOOJ: mayúsculas, tracking amplio */
+  .vooj-wordmark {
+    @apply font-sans font-medium uppercase tracking-wordmark text-vooj-bone;
+  }
+
+  /* Etiqueta de apoyo (tagline, navegación) */
+  .vooj-eyebrow {
+    @apply font-sans font-light uppercase tracking-wide2 text-vooj-bone/70 text-xs;
+  }
+
+  /* Formularios del panel admin */
+  .vooj-label {
+    @apply block vooj-eyebrow text-vooj-bone/50 mb-1.5;
+  }
+
+  .vooj-input {
+    @apply w-full bg-transparent border border-vooj-bone/20 px-3 py-2 text-sm text-vooj-bone
+      placeholder:text-vooj-bone/30 focus:outline-none focus:border-vooj-bone/50
+      disabled:opacity-40;
+  }
+
+  .vooj-btn {
+    @apply vooj-eyebrow border border-vooj-bone/40 px-4 py-2.5 text-vooj-bone/80
+      transition-colors hover:bg-vooj-bone hover:text-vooj-black
+      disabled:opacity-40 disabled:cursor-not-allowed
+      disabled:hover:bg-transparent disabled:hover:text-vooj-bone/80;
+  }
+
+  .vooj-btn-plain {
+    @apply vooj-eyebrow px-3 py-2 text-vooj-bone/50 transition-colors hover:text-vooj-bone;
+  }
+}
