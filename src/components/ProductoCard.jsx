@@ -53,6 +53,10 @@ export default function ProductoCard({ producto, variante = 'normal' }) {
         <p className="mt-1.5 text-[0.8125rem] font-light tabular-nums text-vooj-ink/50">
           {formatPrecioMXN(producto.precio)}
         </p>
+        {/* Código para pedir por WhatsApp — dato meta, no protagonista. */}
+        {producto.sku && (
+          <p className="vooj-meta mt-1 font-mono">{producto.sku}</p>
+        )}
       </div>
     </article>
   )

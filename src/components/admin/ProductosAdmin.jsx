@@ -5,7 +5,8 @@ import { eliminarFotos } from '../../lib/fotos.js'
 import ProductoForm from './ProductoForm.jsx'
 import BotonExportarPdf from './BotonExportarPdf.jsx'
 
-const COLUMNAS = 'id, nombre, descripcion, precio, categoria, talla, existencias, disponible, fotos, actualizado_en'
+const COLUMNAS =
+  'id, sku, nombre, descripcion, precio, categoria, material, talla, existencias, disponible, fotos, actualizado_en'
 
 export default function ProductosAdmin() {
   const [estado, setEstado] = useState('cargando') // 'cargando' | 'ok' | 'error'
@@ -140,6 +141,7 @@ export default function ProductosAdmin() {
             <table className="w-full text-sm border-collapse">
               <thead>
                 <tr className="border-b border-vooj-ink/20 text-left">
+                  <th className="py-3 pr-4 vooj-eyebrow text-vooj-ink/55 font-light">SKU</th>
                   <th className="py-3 pr-4 vooj-eyebrow text-vooj-ink/55 font-light">Nombre</th>
                   <th className="py-3 pr-4 vooj-eyebrow text-vooj-ink/55 font-light">Categoría</th>
                   <th className="py-3 pr-4 vooj-eyebrow text-vooj-ink/55 font-light">Precio</th>
@@ -158,6 +160,9 @@ export default function ProductosAdmin() {
                       editando?.id === p.id ? 'bg-vooj-ink/[0.05]' : ''
                     }`}
                   >
+                    <td className="py-3 pr-4 font-mono text-xs text-vooj-ink/55">
+                      {p.sku}
+                    </td>
                     <td className="py-3 pr-4 text-vooj-ink/90">{p.nombre}</td>
                     <td className="py-3 pr-4 text-vooj-ink/70">{p.categoria}</td>
                     <td className="py-3 pr-4 text-vooj-ink/70">{formatPrecioMXN(p.precio)}</td>

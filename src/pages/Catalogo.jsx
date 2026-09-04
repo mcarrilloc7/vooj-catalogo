@@ -139,7 +139,7 @@ export default function Catalogo() {
 
       const { data, error } = await supabase
         .from('productos')
-        .select('id, nombre, descripcion, precio, categoria, talla, fotos')
+        .select('id, sku, nombre, descripcion, precio, categoria, talla, fotos')
         .eq('disponible', true)
         .order('actualizado_en', { ascending: false })
 

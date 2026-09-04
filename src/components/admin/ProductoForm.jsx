@@ -7,6 +7,7 @@ const VACIO = {
   descripcion: '',
   precio: '',
   categoria: '',
+  material: '',
   talla: '',
   existencias: '',
   disponible: true,
@@ -19,6 +20,7 @@ function desdeProducto(p) {
     descripcion: p.descripcion ?? '',
     precio: p.precio ?? '',
     categoria: p.categoria ?? '',
+    material: p.material ?? '',
     talla: p.talla ?? '',
     existencias: p.existencias ?? '',
     disponible: p.disponible ?? true,
@@ -140,6 +142,7 @@ export default function ProductoForm({ inicial, onGuardar, onCancelar, guardando
       descripcion: form.descripcion.trim() || null,
       precio,
       categoria,
+      material: form.material.trim() || null,
       talla: form.talla.trim() || null,
       existencias,
       disponible: Boolean(form.disponible),
@@ -166,9 +169,15 @@ export default function ProductoForm({ inicial, onGuardar, onCancelar, guardando
       onSubmit={onSubmit}
       className="border border-vooj-ink/15 p-6 grid gap-4 sm:grid-cols-2"
     >
-      <p className="sm:col-span-2 vooj-eyebrow text-vooj-ink/75">
-        {editando ? `Editando: ${inicial.nombre}` : 'Nuevo producto'}
-      </p>
+      <div className="sm:col-span-2 flex flex-wrap items-baseline justify-between gap-2">
+        <p className="vooj-eyebrow text-vooj-ink/75">
+          {editando ? `Editando: ${inicial.nombre}` : 'Nuevo producto'}
+        </p>
+        {/* El SKU se genera solo en la base; aquí sólo se consulta. */}
+        <p className="vooj-meta font-mono">
+          {editando ? inicial.sku : 'SKU automático al guardar'}
+        </p>
+      </div>
 
       <div className="sm:col-span-2">
         <label className="vooj-label" htmlFor="f-nombre">Nombre</label>
@@ -212,6 +221,17 @@ export default function ProductoForm({ inicial, onGuardar, onCancelar, guardando
           className="vooj-input"
           value={form.categoria}
           onChange={(e) => set('categoria', e.target.value)}
+        />
+      </div>
+
+      <div>
+        <label className="vooj-label" htmlFor="f-material">Material (opcional)</label>
+        <input
+          id="f-material"
+          className="vooj-input"
+          placeholder="Algodón, lino…"
+          value={form.material}
+          onChange={(e) => set('material', e.target.value)}
         />
       </div>
 
