@@ -22,7 +22,7 @@ export default function Layout() {
     <div className="min-h-screen bg-vooj-bone text-vooj-ink flex flex-col">
       {/* Barra negra sólida a todo el ancho */}
       <header className="relative bg-vooj-black text-vooj-bone">
-        <div className="mx-auto max-w-6xl px-6 h-16 flex items-center justify-between">
+        <div className="w-full px-6 h-16 flex items-center justify-between">
           <Link
             to="/"
             onClick={() => setAbierto(false)}
@@ -84,12 +84,14 @@ export default function Layout() {
         )}
       </header>
 
-      <main className="flex-1 mx-auto w-full max-w-6xl px-6 py-16">
+      {/* Ancho completo con padding lateral — mismo criterio en todas las
+          vistas para que header, contenido y footer alineen a la izquierda. */}
+      <main className="flex-1 w-full px-6 py-16">
         <Outlet />
       </main>
 
       <footer>
-        <div className="mx-auto max-w-6xl px-6 pb-12 pt-24 vooj-eyebrow text-vooj-ink/40">
+        <div className="w-full px-6 pb-12 pt-24 vooj-eyebrow text-vooj-ink/40">
           VOOJ · Boutique de moda
         </div>
       </footer>

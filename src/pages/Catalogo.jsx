@@ -5,7 +5,13 @@ import { primeraFoto } from '../lib/format.js'
 import ProductoCard from '../components/ProductoCard.jsx'
 import FiltrosCatalogo from '../components/FiltrosCatalogo.jsx'
 
-const GRID = 'grid grid-cols-2 md:grid-cols-4 gap-x-3 sm:gap-x-6 gap-y-14'
+// A ancho completo hay que subir columnas en pantallas grandes para que la
+// tarjeta no se vuelva gigante (~290px de ancho es el objetivo).
+const GRID =
+  'grid grid-cols-2 md:grid-cols-4 2xl:grid-cols-5 min-[1900px]:grid-cols-6 gap-x-3 sm:gap-x-6 gap-y-14'
+
+// La banda ocupa la fila completa en cada breakpoint.
+const BANDA = 'col-span-2 md:col-span-4 2xl:col-span-5 min-[1900px]:col-span-6'
 
 // Peso visual por recencia (sin tocar la BD):
 //  - Las 3 piezas más recientes forman una fila destacada: 1 grande + 2
@@ -46,7 +52,7 @@ function Rejilla({ productos }) {
           return (
             <div
               key={p.id}
-              className={`animate-fade-up ${banda ? 'col-span-2 md:col-span-4' : ''}`}
+              className={`animate-fade-up ${banda ? BANDA : ''}`}
               style={{ animationDelay: `${Math.min(k * 25, 250)}ms` }}
             >
               <ProductoCard producto={p} variante={banda ? 'ancho' : 'normal'} />
