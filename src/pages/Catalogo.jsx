@@ -212,7 +212,9 @@ export default function Catalogo() {
   }, [claveGrid])
 
   return (
-    <div>
+    // -mt-8 recorta el py-16 del <main> sólo en esta vista: el bloque de
+    // título queda cerca del header en vez de flotando.
+    <div className="-mt-8">
       {/* Título como bloque negro acotado — sello de sección, no franja. */}
       <div className="w-fit bg-vooj-black px-6 py-4">
         <h1 className="vooj-wordmark -mr-[0.35em] text-2xl text-vooj-bone sm:text-3xl">
@@ -220,7 +222,14 @@ export default function Catalogo() {
         </h1>
       </div>
 
-      <div className="mt-12">
+      {/* El contador va pegado al título: título + dato = una unidad. */}
+      {estado === 'ok' && productos.length > 0 && (
+        <p className="vooj-meta mt-3">
+          {filtrados.length} {filtrados.length === 1 ? 'pieza' : 'piezas'}
+        </p>
+      )}
+
+      <div className="mt-6">
         {estado === 'cargando' && <CatalogoSkeleton />}
 
         {estado === 'error' && (
@@ -236,13 +245,12 @@ export default function Catalogo() {
 
         {estado === 'ok' && productos.length > 0 && (
           <>
-            <div ref={filtrosRef} className="scroll-mt-6">
+            <div ref={filtrosRef} className="scroll-mt-20">
               <FiltrosCatalogo
                 categorias={categoriasConThumb}
                 tallas={tallas}
                 precioMin={precioMin}
                 precioMax={precioMax}
-                total={filtrados.length}
               />
             </div>
 

@@ -63,14 +63,14 @@ function CirculoCategoria({ categoria, thumb, activo, onClick }) {
  *  - categorias: [{ categoria, thumb }]  (thumb = 1ª foto de esa categoría o null)
  *  - tallas: string[]  (valores distintos)
  *  - precioMin, precioMax: rango real de precios (para los placeholders)
- *  - total: nº de productos que pasan los filtros actuales
+ *
+ * El contador de piezas vive en Catalogo.jsx, pegado al bloque de título.
  */
 export default function FiltrosCatalogo({
   categorias,
   tallas,
   precioMin,
   precioMax,
-  total,
 }) {
   const [params, setParams] = useSearchParams()
 
@@ -176,11 +176,8 @@ export default function FiltrosCatalogo({
         </div>
       </div>
 
-      <div className="flex items-center gap-5">
-        <span className="vooj-meta">
-          {total} {total === 1 ? 'pieza' : 'piezas'}
-        </span>
-        {hayFiltros && (
+      {hayFiltros && (
+        <div>
           <button
             type="button"
             onClick={() => setParams({}, { replace: true })}
@@ -188,8 +185,8 @@ export default function FiltrosCatalogo({
           >
             Limpiar filtros
           </button>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   )
 }
