@@ -81,8 +81,8 @@ export default function Layout() {
         <Outlet />
       </main>
 
-      <footer className="border-t border-vooj-ink/15">
-        <div className="mx-auto max-w-6xl px-6 py-8 vooj-eyebrow">
+      <footer>
+        <div className="mx-auto max-w-6xl px-6 pb-12 pt-24 vooj-eyebrow text-vooj-ink/40">
           VOOJ · Boutique de moda
         </div>
       </footer>

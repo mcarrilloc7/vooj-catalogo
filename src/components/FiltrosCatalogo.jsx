@@ -1,16 +1,17 @@
 import { useSearchParams } from 'react-router-dom'
 import VoojBadge from './VoojBadge.jsx'
 
-function Chip({ activo, onClick, children }) {
+// Talla: sin recuadro. Sólo texto; se subraya al elegirse.
+function Talla({ activo, onClick, children }) {
   return (
     <button
       type="button"
       onClick={onClick}
       aria-pressed={activo}
-      className={`px-3 py-1.5 vooj-eyebrow border transition-colors ${
+      className={`py-1 text-sm font-light transition-colors ${
         activo
-          ? 'bg-vooj-ink text-vooj-bone border-vooj-ink'
-          : 'border-vooj-ink/25 text-vooj-ink/70 hover:border-vooj-ink/50'
+          ? 'text-vooj-ink underline decoration-2 underline-offset-4'
+          : 'text-vooj-ink/45 hover:text-vooj-ink'
       }`}
     >
       {children}
@@ -27,8 +28,8 @@ function CirculoCategoria({ categoria, thumb, activo, onClick }) {
       className="shrink-0 flex w-20 flex-col items-center gap-2"
     >
       <span
-        className={`block h-16 w-16 overflow-hidden rounded-full border-2 transition-colors ${
-          activo ? 'border-vooj-ink' : 'border-vooj-ink/15'
+        className={`block h-16 w-16 overflow-hidden rounded-full transition-[box-shadow] ${
+          activo ? 'ring-1 ring-vooj-ink ring-offset-2 ring-offset-vooj-bone' : ''
         }`}
       >
         {thumb ? (
@@ -43,8 +44,8 @@ function CirculoCategoria({ categoria, thumb, activo, onClick }) {
         )}
       </span>
       <span
-        className={`vooj-eyebrow text-center leading-tight ${
-          activo ? 'text-vooj-ink' : 'text-vooj-ink/55'
+        className={`text-xs font-light text-center leading-tight ${
+          activo ? 'text-vooj-ink' : 'text-vooj-ink/50'
         }`}
       >
         {categoria}
@@ -93,27 +94,26 @@ export default function FiltrosCatalogo({
 
   const hayFiltros = Boolean(q || categoria || talla || min || max)
 
-  return (
-    <div className="mb-10 space-y-6 border-b border-vooj-ink/12 pb-8">
-      {/* Búsqueda */}
-      <div>
-        <label htmlFor="buscar" className="vooj-label">
-          Buscar
-        </label>
-        <input
-          id="buscar"
-          type="search"
-          value={q}
-          onChange={(e) => actualizar({ q: e.target.value })}
-          placeholder="Nombre de la prenda…"
-          className="vooj-input"
-        />
-      </div>
+  const inputPrecio =
+    'w-16 bg-transparent border-0 border-b border-vooj-ink/25 px-0 py-1 text-sm ' +
+    'text-vooj-ink tabular-nums placeholder:text-vooj-ink/30 ' +
+    'focus:outline-none focus:border-vooj-ink/60'
 
-      {/* Categoría — círculos con foto */}
+  return (
+    <div className="mb-14 space-y-7">
+      {/* Búsqueda — sin label, el placeholder alcanza */}
+      <input
+        type="search"
+        aria-label="Buscar por nombre"
+        value={q}
+        onChange={(e) => actualizar({ q: e.target.value })}
+        placeholder="Buscar por nombre…"
+        className="w-full bg-transparent border-0 border-b border-vooj-ink/25 px-0 py-2 text-sm text-vooj-ink placeholder:text-vooj-ink/35 focus:outline-none focus:border-vooj-ink/60"
+      />
+
+      {/* Categoría — círculos con foto (se explican solos) */}
       {categorias.length > 0 && (
-        <div>
-          <p className="vooj-label">Categoría</p>
+        <div role="group" aria-label="Categoría">
           <div className="flex gap-4 overflow-x-auto pb-1 no-scrollbar">
             {categorias.map((c) => (
               <CirculoCategoria
@@ -128,61 +128,63 @@ export default function FiltrosCatalogo({
         </div>
       )}
 
-      {/* Talla — chips */}
-      {tallas.length > 0 && (
-        <div>
-          <p className="vooj-label">Talla</p>
-          <div className="flex flex-wrap gap-2">
-            {tallas.map((t) => (
-              <Chip
-                key={t}
-                activo={talla === t}
-                onClick={() => alternar('talla', t)}
-              >
-                {t}
-              </Chip>
-            ))}
+      <div className="flex flex-wrap items-end gap-x-10 gap-y-6">
+        {/* Talla */}
+        {tallas.length > 0 && (
+          <div>
+            <p className="vooj-meta mb-1">talla</p>
+            <div className="flex flex-wrap gap-x-4">
+              {tallas.map((t) => (
+                <Talla
+                  key={t}
+                  activo={talla === t}
+                  onClick={() => alternar('talla', t)}
+                >
+                  {t}
+                </Talla>
+              ))}
+            </div>
           </div>
-        </div>
-      )}
+        )}
 
-      {/* Precio */}
-      <div>
-        <p className="vooj-label">Precio (MXN)</p>
-        <div className="flex items-center gap-3">
-          <input
-            type="number"
-            min="0"
-            inputMode="numeric"
-            aria-label="Precio mínimo"
-            value={min}
-            placeholder={precioMin != null ? String(precioMin) : 'Mín'}
-            onChange={(e) => actualizar({ min: e.target.value })}
-            className="vooj-input w-24"
-          />
-          <span className="text-vooj-ink/40">—</span>
-          <input
-            type="number"
-            min="0"
-            inputMode="numeric"
-            aria-label="Precio máximo"
-            value={max}
-            placeholder={precioMax != null ? String(precioMax) : 'Máx'}
-            onChange={(e) => actualizar({ max: e.target.value })}
-            className="vooj-input w-24"
-          />
+        {/* Precio */}
+        <div>
+          <p className="vooj-meta mb-1">precio · mxn</p>
+          <div className="flex items-center gap-3">
+            <input
+              type="number"
+              min="0"
+              inputMode="numeric"
+              aria-label="Precio mínimo"
+              value={min}
+              placeholder={precioMin != null ? String(precioMin) : 'mín'}
+              onChange={(e) => actualizar({ min: e.target.value })}
+              className={inputPrecio}
+            />
+            <span className="text-vooj-ink/30">—</span>
+            <input
+              type="number"
+              min="0"
+              inputMode="numeric"
+              aria-label="Precio máximo"
+              value={max}
+              placeholder={precioMax != null ? String(precioMax) : 'máx'}
+              onChange={(e) => actualizar({ max: e.target.value })}
+              className={inputPrecio}
+            />
+          </div>
         </div>
       </div>
 
-      <div className="flex items-center gap-4 pt-1">
-        <span className="vooj-eyebrow text-vooj-ink/45">
+      <div className="flex items-center gap-5">
+        <span className="vooj-meta">
           {total} {total === 1 ? 'pieza' : 'piezas'}
         </span>
         {hayFiltros && (
           <button
             type="button"
             onClick={() => setParams({}, { replace: true })}
-            className="vooj-btn-plain"
+            className="vooj-link"
           >
             Limpiar filtros
           </button>

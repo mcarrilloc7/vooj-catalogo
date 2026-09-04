@@ -2,20 +2,32 @@ import { useState } from 'react'
 import { formatPrecioMXN, primeraFoto } from '../lib/format.js'
 import VoojBadge from './VoojBadge.jsx'
 
-// Sin foto: el logo VOOJ ocupa la tarjeta (su fondo negro ya hace de mosaico).
-// alt="" porque es decorativo: el nombre del producto va justo debajo.
+// El recorte de la foto cambia según el papel de la pieza en el grid.
+//   normal -> retrato   ·   ancho -> apaisado   ·   hero -> llena su celda
+const RATIO = {
+  normal: 'aspect-[3/4]',
+  ancho: 'aspect-[3/2]',
+}
+
+// Sin foto: el logo VOOJ ocupa el hueco (su fondo negro hace de mosaico).
 function FotoPlaceholder() {
   return <VoojBadge alt="" className="absolute inset-0 h-full w-full" />
 }
 
-export default function ProductoCard({ producto }) {
+export default function ProductoCard({ producto, variante = 'normal' }) {
   const src = primeraFoto(producto.fotos)
   const [imgFallo, setImgFallo] = useState(false)
   const mostrarFoto = src && !imgFallo
 
+  const esHero = variante === 'hero'
+  const marco = esHero
+    ? 'aspect-[4/5] md:aspect-auto md:flex-1 md:min-h-0'
+    : RATIO[variante] ?? RATIO.normal
+
   return (
-    <article className="group">
-      <div className="relative aspect-[3/4] overflow-hidden border border-vooj-ink/15 bg-vooj-black">
+    <article className={`group flex flex-col ${esHero ? 'md:h-full' : ''}`}>
+      {/* La foto va a sangre sobre el fondo — sin marco. */}
+      <div className={`relative overflow-hidden bg-vooj-black ${marco}`}>
         {mostrarFoto ? (
           <img
             src={src}
@@ -29,17 +41,15 @@ export default function ProductoCard({ producto }) {
         )}
       </div>
 
-      <div className="mt-3 flex items-baseline justify-between gap-3">
-        <h3 className="text-sm text-vooj-ink/90 truncate">{producto.nombre}</h3>
-        {producto.talla && (
-          <span className="vooj-eyebrow shrink-0 text-[0.65rem] text-vooj-ink/55">
-            {producto.talla}
-          </span>
-        )}
+      {/* Nombre lleva el peso; el precio se retira. */}
+      <div className="mt-4 shrink-0">
+        <h3 className="text-[0.9375rem] font-normal leading-snug text-vooj-ink">
+          {producto.nombre}
+        </h3>
+        <p className="mt-1.5 text-[0.8125rem] font-light tabular-nums text-vooj-ink/50">
+          {formatPrecioMXN(producto.precio)}
+        </p>
       </div>
-      <p className="mt-1 text-sm text-vooj-ink/65">
-        {formatPrecioMXN(producto.precio)}
-      </p>
     </article>
   )
 }

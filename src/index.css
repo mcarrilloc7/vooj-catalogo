@@ -34,9 +34,21 @@
     @apply font-sans font-medium uppercase tracking-wordmark text-vooj-ink;
   }
 
-  /* Etiqueta de apoyo (tagline, navegación, labels) */
+  /* Etiqueta de apoyo. Reservada para navegación y tagline. */
   .vooj-eyebrow {
     @apply font-sans font-light uppercase tracking-wide2 text-vooj-ink/70 text-xs;
+  }
+
+  /* Texto "meta": contadores, micro-labels de filtro. Discreto, sin
+     mayúsculas ni tracking — que no compita con el contenido. */
+  .vooj-meta {
+    @apply text-xs font-light text-vooj-ink/45;
+  }
+
+  /* Acción de bajo peso en la vitrina (no un botón): subrayado al hover. */
+  .vooj-link {
+    @apply text-xs font-light text-vooj-ink/55 transition-colors
+      hover:text-vooj-ink hover:underline underline-offset-4;
   }
 
   /* Formularios del panel admin */

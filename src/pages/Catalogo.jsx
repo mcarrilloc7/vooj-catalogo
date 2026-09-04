@@ -6,18 +6,85 @@ import PageHeading from '../components/PageHeading.jsx'
 import ProductoCard from '../components/ProductoCard.jsx'
 import FiltrosCatalogo from '../components/FiltrosCatalogo.jsx'
 
-const GRID = 'grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-4 gap-y-10'
+const GRID = 'grid grid-cols-2 md:grid-cols-4 gap-x-3 sm:gap-x-6 gap-y-14'
+
+// Peso visual por recencia (sin tocar la BD):
+//  - Las 3 piezas más recientes forman una fila destacada: 1 grande + 2
+//    apaisadas apiladas.
+//  - A partir de ahí, grid normal; cada ~7 una banda a todo el ancho
+//    marca el ritmo.
+function Rejilla({ productos }) {
+  const conDestacado = productos.length >= 3
+  const destacado = conDestacado ? productos.slice(0, 3) : []
+  const resto = conDestacado ? productos.slice(3) : productos
+  const base = conDestacado ? 3 : 0
+
+  return (
+    <div>
+      {conDestacado && (
+        <div className="mb-14 grid grid-cols-1 gap-6 md:grid-cols-2">
+          <div className="animate-fade-up">
+            <ProductoCard producto={destacado[0]} variante="hero" />
+          </div>
+          <div className="flex flex-col justify-between gap-6">
+            {destacado.slice(1).map((p, k) => (
+              <div
+                key={p.id}
+                className="animate-fade-up"
+                style={{ animationDelay: `${(k + 1) * 45}ms` }}
+              >
+                <ProductoCard producto={p} variante="ancho" />
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      <div className={GRID}>
+        {resto.map((p, k) => {
+          const i = base + k
+          const banda = i > 0 && i % 7 === 0
+          return (
+            <div
+              key={p.id}
+              className={`animate-fade-up ${banda ? 'col-span-2 md:col-span-4' : ''}`}
+              style={{ animationDelay: `${Math.min(k * 25, 250)}ms` }}
+            >
+              <ProductoCard producto={p} variante={banda ? 'ancho' : 'normal'} />
+            </div>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
 
 function CatalogoSkeleton() {
   return (
-    <div className={GRID} aria-hidden="true">
-      {Array.from({ length: 8 }).map((_, i) => (
-        <div key={i} className="animate-pulse">
-          <div className="aspect-[3/4] bg-vooj-ink/[0.08]" />
-          <div className="mt-3 h-3 w-2/3 bg-vooj-ink/[0.08]" />
-          <div className="mt-2 h-3 w-1/3 bg-vooj-ink/[0.08]" />
+    <div aria-hidden="true">
+      <div className="mb-14 grid grid-cols-1 gap-6 md:grid-cols-2">
+        <div className="animate-pulse">
+          <div className="aspect-[4/5] bg-vooj-ink/[0.07]" />
+          <div className="mt-4 h-3 w-1/2 bg-vooj-ink/[0.07]" />
         </div>
-      ))}
+        <div className="flex flex-col justify-between gap-6">
+          {[0, 1].map((k) => (
+            <div key={k} className="animate-pulse">
+              <div className="aspect-[3/2] bg-vooj-ink/[0.07]" />
+              <div className="mt-4 h-3 w-1/2 bg-vooj-ink/[0.07]" />
+            </div>
+          ))}
+        </div>
+      </div>
+      <div className={GRID}>
+        {Array.from({ length: 4 }).map((_, i) => (
+          <div key={i} className="animate-pulse">
+            <div className="aspect-[3/4] bg-vooj-ink/[0.07]" />
+            <div className="mt-4 h-3 w-2/3 bg-vooj-ink/[0.07]" />
+            <div className="mt-2 h-3 w-1/3 bg-vooj-ink/[0.07]" />
+          </div>
+        ))}
+      </div>
     </div>
   )
 }
@@ -26,7 +93,7 @@ function EstadoMensaje({ titulo, detalle }) {
   return (
     <div className="py-24 text-center">
       <p className="vooj-wordmark text-lg text-vooj-ink/80">{titulo}</p>
-      <p className="mt-4 vooj-eyebrow text-vooj-ink/55">{detalle}</p>
+      <p className="mt-4 text-sm font-light text-vooj-ink/50">{detalle}</p>
     </div>
   )
 }
@@ -37,10 +104,10 @@ function EstadoError({ onReintentar }) {
       <p className="vooj-wordmark text-lg text-vooj-ink/80">
         No pudimos cargar el catálogo
       </p>
-      <p className="mt-4 vooj-eyebrow text-vooj-ink/55">
+      <p className="mt-4 text-sm font-light text-vooj-ink/50">
         Revisa tu conexión e inténtalo de nuevo en un momento.
       </p>
-      <button onClick={onReintentar} className="mt-8 vooj-btn">
+      <button onClick={onReintentar} className="vooj-link mt-6">
         Reintentar
       </button>
     </div>
@@ -143,7 +210,7 @@ export default function Catalogo() {
 
   return (
     <div>
-      <PageHeading eyebrow="Vista pública" title="Catálogo" />
+      <PageHeading title="Catálogo" />
 
       <div className="mt-12">
         {estado === 'cargando' && <CatalogoSkeleton />}
@@ -177,17 +244,7 @@ export default function Catalogo() {
                 detalle="Prueba con otra combinación de filtros."
               />
             ) : (
-              <div key={claveGrid} className={`${GRID} animate-fade-up`}>
-                {filtrados.map((p, i) => (
-                  <div
-                    key={p.id}
-                    className="animate-fade-up"
-                    style={{ animationDelay: `${Math.min(i * 25, 250)}ms` }}
-                  >
-                    <ProductoCard producto={p} />
-                  </div>
-                ))}
-              </div>
+              <Rejilla key={claveGrid} productos={filtrados} />
             )}
           </>
         )}
