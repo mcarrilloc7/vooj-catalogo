@@ -3,6 +3,7 @@ import { supabase } from '../../lib/supabase.js'
 import { formatPrecioMXN } from '../../lib/format.js'
 import { eliminarFotos } from '../../lib/fotos.js'
 import ProductoForm from './ProductoForm.jsx'
+import BotonExportarPdf from './BotonExportarPdf.jsx'
 
 const COLUMNAS = 'id, nombre, descripcion, precio, categoria, talla, existencias, disponible, fotos, actualizado_en'
 
@@ -88,11 +89,14 @@ export default function ProductosAdmin() {
 
   return (
     <div className="space-y-10">
-      <header className="flex items-baseline justify-between">
-        <h1 className="vooj-wordmark text-2xl sm:text-3xl">Productos</h1>
-        <span className="vooj-eyebrow text-vooj-ink/55">
-          {estado === 'ok' ? `${productos.length} en total` : ''}
-        </span>
+      <header className="flex flex-wrap items-start justify-between gap-4">
+        <div>
+          <h1 className="vooj-wordmark text-2xl sm:text-3xl">Productos</h1>
+          <span className="vooj-meta">
+            {estado === 'ok' ? `${productos.length} en total` : ''}
+          </span>
+        </div>
+        {estado === 'ok' && <BotonExportarPdf productos={productos} />}
       </header>
 
       {aviso && (
