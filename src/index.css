@@ -61,3 +61,14 @@
     @apply vooj-eyebrow px-3 py-2 text-vooj-ink/60 transition-colors hover:text-vooj-ink;
   }
 }
+
+@layer utilities {
+  /* Fila con scroll horizontal sin barra visible (círculos de categoría) */
+  .no-scrollbar {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+}

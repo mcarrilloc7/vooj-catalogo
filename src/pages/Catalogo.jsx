@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { supabase } from '../lib/supabase.js'
+import { primeraFoto } from '../lib/format.js'
 import PageHeading from '../components/PageHeading.jsx'
 import ProductoCard from '../components/ProductoCard.jsx'
 import FiltrosCatalogo from '../components/FiltrosCatalogo.jsx'
@@ -62,7 +63,7 @@ export default function Catalogo() {
 
       const { data, error } = await supabase
         .from('productos')
-        .select('id, nombre, precio, categoria, talla, fotos')
+        .select('id, nombre, descripcion, precio, categoria, talla, fotos')
         .eq('disponible', true)
         .order('actualizado_en', { ascending: false })
 
@@ -88,6 +89,17 @@ export default function Catalogo() {
     () => unicos(productos.map((p) => p.categoria)),
     [productos],
   )
+  // Cada categoría con la 1ª foto disponible de alguno de sus productos (o null).
+  const categoriasConThumb = useMemo(
+    () =>
+      categorias.map((c) => {
+        const conFoto = productos.find(
+          (p) => p.categoria === c && primeraFoto(p.fotos),
+        )
+        return { categoria: c, thumb: conFoto ? primeraFoto(conFoto.fotos) : null }
+      }),
+    [categorias, productos],
+  )
   const tallas = useMemo(() => unicos(productos.map((p) => p.talla)), [productos])
   const precios = useMemo(
     () => productos.map((p) => Number(p.precio)).filter(Number.isFinite),
@@ -97,6 +109,7 @@ export default function Catalogo() {
   const precioMax = precios.length ? Math.ceil(Math.max(...precios)) : null
 
   // Filtros activos (leídos de la URL)
+  const fQ = (params.get('q') || '').trim().toLowerCase()
   const fCategoria = params.get('categoria') || ''
   const fTalla = params.get('talla') || ''
   const fMin = params.get('min') || ''
@@ -105,7 +118,9 @@ export default function Catalogo() {
   const filtrados = useMemo(() => {
     const min = Number(fMin)
     const max = Number(fMax)
+    const coincide = (texto) => (texto || '').toLowerCase().includes(fQ)
     return productos.filter((p) => {
+      if (fQ && !coincide(p.nombre) && !coincide(p.descripcion)) return false
       if (fCategoria && p.categoria !== fCategoria) return false
       if (fTalla && p.talla !== fTalla) return false
       const precio = Number(p.precio)
@@ -113,9 +128,9 @@ export default function Catalogo() {
       if (fMax !== '' && Number.isFinite(max) && precio > max) return false
       return true
     })
-  }, [productos, fCategoria, fTalla, fMin, fMax])
+  }, [productos, fQ, fCategoria, fTalla, fMin, fMax])
 
-  const claveGrid = `${fCategoria}|${fTalla}|${fMin}|${fMax}`
+  const claveGrid = `${fQ}|${fCategoria}|${fTalla}|${fMin}|${fMax}`
 
   // Al cambiar los filtros, si la barra quedó por encima del viewport,
   // volvemos a ella con scroll suave (nada de saltos bruscos).
@@ -148,7 +163,7 @@ export default function Catalogo() {
           <>
             <div ref={filtrosRef} className="scroll-mt-6">
               <FiltrosCatalogo
-                categorias={categorias}
+                categorias={categoriasConThumb}
                 tallas={tallas}
                 precioMin={precioMin}
                 precioMax={precioMax}
