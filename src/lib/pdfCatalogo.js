@@ -72,7 +72,6 @@ const NEGRO_PORTADA = [0, 0, 0]
 const FOTO_V = { w: 320, h: 427 } // retrato
 const FOTO_H = { w: 480, h: 320 } // apaisado
 const SELLO_PX = { w: 200, h: 200 }
-const LOCKUP_PX = { w: 520, h: 520 }
 const CALIDAD_JPEG = 0.72
 const CONCURRENCIA = 6
 
@@ -106,22 +105,16 @@ function normalizar(img, { w, h, contener = false, fondo = '#0A0A0A' }) {
 }
 
 async function prepararMarca() {
-  const vacio = { sello: null, lockup: null, placeholderV: null, placeholderH: null }
+  // La portada ya no usa el JPEG del lockup: se dibuja vectorial.
   try {
-    const [marca, lockup] = await Promise.all([
-      cargarImagen('/logo-vooj-mark.png'),
-      cargarImagen('/logo-vooj.jpg').catch(() => null),
-    ])
+    const marca = await cargarImagen('/logo-vooj-mark.png')
     return {
       sello: normalizar(marca, { ...SELLO_PX, contener: true }),
-      lockup: lockup
-        ? normalizar(lockup, { ...LOCKUP_PX, contener: true, fondo: '#000000' })
-        : null,
       placeholderV: normalizar(marca, { ...FOTO_V, contener: true }),
       placeholderH: normalizar(marca, { ...FOTO_H, contener: true }),
     }
   } catch {
-    return vacio
+    return { sello: null, placeholderV: null, placeholderH: null }
   }
 }
 
@@ -224,39 +217,168 @@ function dibujarFondo(doc, color) {
   doc.rect(0, 0, PAGINA.w, PAGINA.h, 'F')
 }
 
-/** Portada: negra, lockup centrado, y el gancho del SKU. */
-function dibujarPortada(doc, marca, fechaTexto, totalPiezas) {
+/** Arco como polilínea: jsPDF no trae primitiva de arco. */
+function arco(doc, cx, cy, r, a0, a1, pasos = 40) {
+  const puntos = []
+  for (let i = 0; i <= pasos; i++) {
+    const a = a0 + ((a1 - a0) * i) / pasos
+    puntos.push([cx + r * Math.cos(a), cy + r * Math.sin(a)])
+  }
+  const relativos = []
+  for (let i = 1; i < puntos.length; i++) {
+    relativos.push([
+      puntos[i][0] - puntos[i - 1][0],
+      puntos[i][1] - puntos[i - 1][1],
+    ])
+  }
+  doc.lines(relativos, puntos[0][0], puntos[0][1], [1, 1], 'S', false)
+}
+
+/**
+ * Los dos aros entrelazados del monograma, dibujados como vectores —
+ * nítidos a cualquier tamaño, sin depender de un bitmap.
+ *
+ * Entrelazado: se trazan los dos aros (el derecho queda encima en ambos
+ * cruces); luego, en el cruce superior, se BORRA con el color de fondo un
+ * arco corto siguiendo el trazo del izquierdo y se repinta ese arco. Así
+ * el izquierdo pasa por encima arriba y el derecho por encima abajo.
+ * Repintar sin borrar antes no se nota: los dos trazos son del mismo color.
+ */
+function dibujarAros(doc, cx, cy, r, color, fondo) {
+  const separacion = r * 1.35
+  const grosor = r * 0.15
+
+  doc.setLineCap('round')
+  doc.setDrawColor(...color)
+  doc.setLineWidth(grosor)
+
+  const izq = cx - separacion / 2
+  const der = cx + separacion / 2
+
+  doc.circle(izq, cy, r, 'S')
+  doc.circle(der, cy, r, 'S')
+
+  // Cruce superior: en jsPDF la Y crece hacia abajo, de ahí el negativo.
+  const h = Math.sqrt(Math.max(r * r - (separacion / 2) ** 2, 0))
+  const angulo = Math.atan2(-h, separacion / 2)
+  const span = (grosor * 1.6) / r
+
+  doc.setDrawColor(...fondo)
+  doc.setLineWidth(grosor * 2.4)
+  arco(doc, izq, cy, r, angulo - span, angulo + span)
+
+  doc.setDrawColor(...color)
+  doc.setLineWidth(grosor)
+  arco(doc, izq, cy, r, angulo - span, angulo + span)
+
+  doc.setLineCap('butt')
+}
+
+/** Texto centrado de verdad: getTextWidth no cuenta el charSpace. */
+function textoCentrado(doc, texto, y, { pt, charSpace = 0, color, fuente = 'helvetica', estilo = 'normal' }) {
+  doc.setFont(fuente, estilo)
+  doc.setFontSize(pt)
+  doc.setTextColor(...color)
+  const ancho =
+    doc.getTextWidth(texto) + Math.max(texto.length - 1, 0) * charSpace
+  doc.text(texto, (PAGINA.w - ancho) / 2, y, { charSpace })
+}
+
+/**
+ * Portada: composición vertical centrada en la página (horizontal y
+ * verticalmente). El monograma va vectorial — nítido a cualquier tamaño.
+ */
+function dibujarPortada(doc, fechaTexto, totalPiezas) {
   dibujarFondo(doc, NEGRO_PORTADA)
 
-  const lado = 74
-  if (marca.lockup) {
-    doc.addImage(marca.lockup, 'JPEG', (PAGINA.w - lado) / 2, 74, lado, lado)
-  } else if (marca.sello) {
-    doc.addImage(marca.sello, 'JPEG', (PAGINA.w - 40) / 2, 90, 40, 40)
+  const R_AROS = 13
+  const altoDe = (pt) => pt * 0.72 * MM_POR_PT // alto visual de mayúsculas
+
+  const H_VOOJ = altoDe(26)
+  const H_TAG = altoDe(7.5)
+  const H_TITULO = altoDe(15)
+  const H_DATO = altoDe(8.5)
+  const H_PIE = altoDe(8)
+  const GROSOR_FILETE = 0.3
+
+  const G = {
+    arosVooj: 15,
+    voojFilete: 5,
+    fileteTag: 5.5,
+    tagTitulo: 28,
+    tituloFecha: 9,
+    fechaPiezas: 5.5,
+    piezasCta: 30,
+    ctaContacto: 6,
   }
 
-  doc.setFont('helvetica', 'normal')
-  doc.setTextColor(...HUESO)
-  doc.setFontSize(17)
-  doc.text('CATÁLOGO', PAGINA.w / 2, 178, { align: 'center', charSpace: 3.4 })
+  const alturaTotal =
+    R_AROS * 2 + G.arosVooj +
+    H_VOOJ + G.voojFilete + GROSOR_FILETE + G.fileteTag +
+    H_TAG + G.tagTitulo +
+    H_TITULO + G.tituloFecha +
+    H_DATO + G.fechaPiezas + H_DATO + G.piezasCta +
+    H_PIE + G.ctaContacto + H_PIE
 
-  doc.setFontSize(8.5)
-  doc.setTextColor(190, 184, 175)
-  doc.text(fechaTexto, PAGINA.w / 2, 190, { align: 'center', charSpace: 0.5 })
-  doc.text(
-    `${totalPiezas} ${totalPiezas === 1 ? 'pieza' : 'piezas'}`,
-    PAGINA.w / 2,
-    197.5,
-    { align: 'center', charSpace: 0.5 },
-  )
+  let y = (PAGINA.h - alturaTotal) / 2
 
-  doc.setFontSize(8)
-  doc.setTextColor(150, 145, 138)
-  doc.text('Pide con el código de la pieza', PAGINA.w / 2, 250, {
-    align: 'center',
-    charSpace: 0.4,
+  // Monograma vectorial
+  dibujarAros(doc, PAGINA.w / 2, y + R_AROS, R_AROS, HUESO, NEGRO_PORTADA)
+  y += R_AROS * 2 + G.arosVooj
+
+  y += H_VOOJ
+  textoCentrado(doc, 'VOOJ', y, { pt: 26, charSpace: 6, color: HUESO })
+  y += G.voojFilete
+
+  const anchoFilete = 48
+  doc.setDrawColor(...HUESO)
+  doc.setLineWidth(GROSOR_FILETE)
+  doc.line((PAGINA.w - anchoFilete) / 2, y, (PAGINA.w + anchoFilete) / 2, y)
+  y += GROSOR_FILETE + G.fileteTag
+
+  y += H_TAG
+  textoCentrado(doc, 'BOUTIQUE DE MODA', y, {
+    pt: 7.5,
+    charSpace: 2.6,
+    color: [200, 194, 185],
   })
-  doc.text(CONTACTO, PAGINA.w / 2, 258, { align: 'center', charSpace: 0.4 })
+  y += G.tagTitulo
+
+  y += H_TITULO
+  textoCentrado(doc, 'CATÁLOGO', y, { pt: 15, charSpace: 3.4, color: HUESO })
+  y += G.tituloFecha
+
+  y += H_DATO
+  textoCentrado(doc, fechaTexto, y, {
+    pt: 8.5,
+    charSpace: 0.5,
+    color: [186, 180, 171],
+  })
+  y += G.fechaPiezas
+
+  y += H_DATO
+  textoCentrado(
+    doc,
+    `${totalPiezas} ${totalPiezas === 1 ? 'pieza' : 'piezas'}`,
+    y,
+    { pt: 8.5, charSpace: 0.5, color: [186, 180, 171] },
+  )
+  y += G.piezasCta
+
+  y += H_PIE
+  textoCentrado(doc, 'Pide con el código de la pieza', y, {
+    pt: 8,
+    charSpace: 0.4,
+    color: [150, 145, 138],
+  })
+  y += G.ctaContacto
+
+  y += H_PIE
+  textoCentrado(doc, CONTACTO, y, {
+    pt: 8,
+    charSpace: 0.4,
+    color: [150, 145, 138],
+  })
 }
 
 /** Membrete ligero de las páginas de contenido: sin filete. */
@@ -443,7 +565,7 @@ export async function generarPdfCatalogo(productos) {
     year: 'numeric',
   })
 
-  dibujarPortada(doc, marca, fechaTexto, lista.length)
+  dibujarPortada(doc, fechaTexto, lista.length)
 
   if (lista.length === 0) {
     doc.addPage()
