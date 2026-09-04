@@ -1,7 +1,9 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { supabase } from '../lib/supabase.js'
 import PageHeading from '../components/PageHeading.jsx'
 import ProductoCard from '../components/ProductoCard.jsx'
+import FiltrosCatalogo from '../components/FiltrosCatalogo.jsx'
 
 const GRID = 'grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-4 gap-y-10'
 
@@ -19,15 +21,11 @@ function CatalogoSkeleton() {
   )
 }
 
-function EstadoVacio() {
+function EstadoMensaje({ titulo, detalle }) {
   return (
     <div className="py-24 text-center">
-      <p className="vooj-wordmark text-lg text-vooj-ink/80">
-        Colección en preparación
-      </p>
-      <p className="mt-4 vooj-eyebrow text-vooj-ink/55">
-        Muy pronto vas a poder ver aquí nuestras piezas.
-      </p>
+      <p className="vooj-wordmark text-lg text-vooj-ink/80">{titulo}</p>
+      <p className="mt-4 vooj-eyebrow text-vooj-ink/55">{detalle}</p>
     </div>
   )
 }
@@ -48,9 +46,13 @@ function EstadoError({ onReintentar }) {
   )
 }
 
+const unicos = (lista) => [...new Set(lista.filter(Boolean))].sort()
+
 export default function Catalogo() {
   const [estado, setEstado] = useState('cargando') // 'cargando' | 'ok' | 'error'
   const [productos, setProductos] = useState([])
+  const [params] = useSearchParams()
+  const filtrosRef = useRef(null)
 
   useEffect(() => {
     let cancelado = false
@@ -60,7 +62,7 @@ export default function Catalogo() {
 
       const { data, error } = await supabase
         .from('productos')
-        .select('id, nombre, precio, talla, fotos')
+        .select('id, nombre, precio, categoria, talla, fotos')
         .eq('disponible', true)
         .order('actualizado_en', { ascending: false })
 
@@ -82,6 +84,48 @@ export default function Catalogo() {
     }
   }, [])
 
+  const categorias = useMemo(
+    () => unicos(productos.map((p) => p.categoria)),
+    [productos],
+  )
+  const tallas = useMemo(() => unicos(productos.map((p) => p.talla)), [productos])
+  const precios = useMemo(
+    () => productos.map((p) => Number(p.precio)).filter(Number.isFinite),
+    [productos],
+  )
+  const precioMin = precios.length ? Math.floor(Math.min(...precios)) : null
+  const precioMax = precios.length ? Math.ceil(Math.max(...precios)) : null
+
+  // Filtros activos (leídos de la URL)
+  const fCategoria = params.get('categoria') || ''
+  const fTalla = params.get('talla') || ''
+  const fMin = params.get('min') || ''
+  const fMax = params.get('max') || ''
+
+  const filtrados = useMemo(() => {
+    const min = Number(fMin)
+    const max = Number(fMax)
+    return productos.filter((p) => {
+      if (fCategoria && p.categoria !== fCategoria) return false
+      if (fTalla && p.talla !== fTalla) return false
+      const precio = Number(p.precio)
+      if (fMin !== '' && Number.isFinite(min) && precio < min) return false
+      if (fMax !== '' && Number.isFinite(max) && precio > max) return false
+      return true
+    })
+  }, [productos, fCategoria, fTalla, fMin, fMax])
+
+  const claveGrid = `${fCategoria}|${fTalla}|${fMin}|${fMax}`
+
+  // Al cambiar los filtros, si la barra quedó por encima del viewport,
+  // volvemos a ella con scroll suave (nada de saltos bruscos).
+  useEffect(() => {
+    const el = filtrosRef.current
+    if (el && el.getBoundingClientRect().top < 0) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }
+  }, [claveGrid])
+
   return (
     <div>
       <PageHeading eyebrow="Vista pública" title="Catálogo" />
@@ -93,14 +137,44 @@ export default function Catalogo() {
           <EstadoError onReintentar={() => window.location.reload()} />
         )}
 
-        {estado === 'ok' && productos.length === 0 && <EstadoVacio />}
+        {estado === 'ok' && productos.length === 0 && (
+          <EstadoMensaje
+            titulo="Colección en preparación"
+            detalle="Muy pronto vas a poder ver aquí nuestras piezas."
+          />
+        )}
 
         {estado === 'ok' && productos.length > 0 && (
-          <div className={GRID}>
-            {productos.map((p) => (
-              <ProductoCard key={p.id} producto={p} />
-            ))}
-          </div>
+          <>
+            <div ref={filtrosRef} className="scroll-mt-6">
+              <FiltrosCatalogo
+                categorias={categorias}
+                tallas={tallas}
+                precioMin={precioMin}
+                precioMax={precioMax}
+                total={filtrados.length}
+              />
+            </div>
+
+            {filtrados.length === 0 ? (
+              <EstadoMensaje
+                titulo="Sin resultados"
+                detalle="Prueba con otra combinación de filtros."
+              />
+            ) : (
+              <div key={claveGrid} className={`${GRID} animate-fade-up`}>
+                {filtrados.map((p, i) => (
+                  <div
+                    key={p.id}
+                    className="animate-fade-up"
+                    style={{ animationDelay: `${Math.min(i * 25, 250)}ms` }}
+                  >
+                    <ProductoCard producto={p} />
+                  </div>
+                ))}
+              </div>
+            )}
+          </>
         )}
       </div>
     </div>

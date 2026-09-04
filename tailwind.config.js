@@ -19,6 +19,15 @@ export default {
         wordmark: '0.35em', // wordmark en mayúsculas, tracking amplio
         wide2: '0.2em',
       },
+      keyframes: {
+        'fade-up': {
+          '0%': { opacity: '0', transform: 'translateY(6px)' },
+          '100%': { opacity: '1', transform: 'translateY(0)' },
+        },
+      },
+      animation: {
+        'fade-up': 'fade-up 0.28s ease both',
+      },
     },
   },
   plugins: [],
