@@ -101,20 +101,24 @@ export default function FiltrosCatalogo({
 
   return (
     <div className="mb-14 space-y-7">
-      {/* Búsqueda — sin label, el placeholder alcanza */}
+      {/* Búsqueda — centrada como objeto, sin label */}
       <input
         type="search"
         aria-label="Buscar por nombre"
         value={q}
         onChange={(e) => actualizar({ q: e.target.value })}
         placeholder="Buscar por nombre…"
-        className="w-full bg-transparent border-0 border-b border-vooj-ink/25 px-0 py-2 text-sm text-vooj-ink placeholder:text-vooj-ink/35 focus:outline-none focus:border-vooj-ink/60"
+        className="mx-auto block w-full max-w-xl bg-transparent border-0 border-b border-vooj-ink/25 px-0 py-2 text-sm text-vooj-ink placeholder:text-vooj-ink/35 focus:outline-none focus:border-vooj-ink/60"
       />
 
-      {/* Categoría — círculos con foto (se explican solos) */}
+      {/* Categoría — fila centrada; si no cabe, hace scroll desde la izquierda */}
       {categorias.length > 0 && (
-        <div role="group" aria-label="Categoría">
-          <div className="flex gap-4 overflow-x-auto pb-1 no-scrollbar">
+        <div
+          role="group"
+          aria-label="Categoría"
+          className="overflow-x-auto pb-1 no-scrollbar"
+        >
+          <div className="mx-auto flex w-max gap-4">
             {categorias.map((c) => (
               <CirculoCategoria
                 key={c.categoria}
@@ -128,12 +132,12 @@ export default function FiltrosCatalogo({
         </div>
       )}
 
-      <div className="flex flex-wrap items-end gap-x-10 gap-y-6">
+      <div className="flex flex-wrap items-end justify-center gap-x-10 gap-y-6">
         {/* Talla */}
         {tallas.length > 0 && (
-          <div>
+          <div className="text-center">
             <p className="vooj-meta mb-1">talla</p>
-            <div className="flex flex-wrap gap-x-4">
+            <div className="flex flex-wrap justify-center gap-x-4">
               {tallas.map((t) => (
                 <Talla
                   key={t}
@@ -148,9 +152,9 @@ export default function FiltrosCatalogo({
         )}
 
         {/* Precio */}
-        <div>
+        <div className="text-center">
           <p className="vooj-meta mb-1">precio · mxn</p>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center justify-center gap-3">
             <input
               type="number"
               min="0"
@@ -177,7 +181,7 @@ export default function FiltrosCatalogo({
       </div>
 
       {hayFiltros && (
-        <div>
+        <div className="text-center">
           <button
             type="button"
             onClick={() => setParams({}, { replace: true })}

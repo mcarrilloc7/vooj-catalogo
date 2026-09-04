@@ -217,25 +217,42 @@ export default function Catalogo() {
     }
   }, [claveGrid])
 
+  const conFiltros = estado === 'ok' && productos.length > 0
+
   return (
     // -mt-8 recorta el py-16 del <main> sólo en esta vista: el bloque de
     // título queda cerca del header en vez de flotando.
     <div className="-mt-8">
-      {/* Título como bloque negro acotado — sello de sección, no franja. */}
-      <div className="w-fit bg-vooj-black px-6 py-4">
-        <h1 className="vooj-wordmark -mr-[0.35em] text-2xl text-vooj-bone sm:text-3xl">
-          Catálogo
-        </h1>
-      </div>
+      {/* ENCABEZADO — centrado como grupo dentro del ancho completo.
+          El grid de productos queda fuera y sigue a ancho completo. */}
+      <header className="flex flex-col items-center">
+        {/* Título como bloque negro acotado — sello de sección, no franja. */}
+        <div className="w-fit bg-vooj-black px-6 py-4">
+          <h1 className="vooj-wordmark -mr-[0.35em] text-2xl text-vooj-bone sm:text-3xl">
+            Catálogo
+          </h1>
+        </div>
 
-      {/* El contador va pegado al título: título + dato = una unidad. */}
-      {estado === 'ok' && productos.length > 0 && (
-        <p className="vooj-meta mt-3">
-          {filtrados.length} {filtrados.length === 1 ? 'pieza' : 'piezas'}
-        </p>
-      )}
+        {/* El contador va pegado al título: título + dato = una unidad. */}
+        {conFiltros && (
+          <p className="vooj-meta mt-3">
+            {filtrados.length} {filtrados.length === 1 ? 'pieza' : 'piezas'}
+          </p>
+        )}
 
-      <div className="mt-6">
+        {conFiltros && (
+          <div ref={filtrosRef} className="mt-6 w-full scroll-mt-20">
+            <FiltrosCatalogo
+              categorias={categoriasConThumb}
+              tallas={tallas}
+              precioMin={precioMin}
+              precioMax={precioMax}
+            />
+          </div>
+        )}
+      </header>
+
+      <div className={conFiltros ? undefined : 'mt-10'}>
         {estado === 'cargando' && <CatalogoSkeleton />}
 
         {estado === 'error' && (
@@ -249,17 +266,8 @@ export default function Catalogo() {
           />
         )}
 
-        {estado === 'ok' && productos.length > 0 && (
+        {conFiltros && (
           <>
-            <div ref={filtrosRef} className="scroll-mt-20">
-              <FiltrosCatalogo
-                categorias={categoriasConThumb}
-                tallas={tallas}
-                precioMin={precioMin}
-                precioMax={precioMax}
-              />
-            </div>
-
             {filtrados.length === 0 ? (
               <EstadoMensaje
                 titulo="Sin resultados"
