@@ -10,11 +10,9 @@ import NotFound from './pages/NotFound.jsx'
 export default function App() {
   return (
     <Routes>
-      {/* Home de marca: sin layout/nav, pantalla completa */}
-      <Route path="/" element={<Home />} />
-
-      {/* Vistas con layout compartido (nav + footer) */}
+      {/* Todas las vistas públicas comparten header + footer */}
       <Route element={<Layout />}>
+        <Route path="/" element={<Home />} />
         <Route path="/catalogo" element={<Catalogo />} />
         <Route path="/nosotros" element={<Nosotros />} />
         <Route path="/contacto" element={<Contacto />} />

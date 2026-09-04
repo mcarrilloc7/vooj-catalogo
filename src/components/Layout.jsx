@@ -8,9 +8,10 @@ const navItems = [
   { to: '/contacto', label: 'Contacto' },
 ]
 
+// Nav sobre fondo negro: texto hueso.
 function linkClase({ isActive }) {
-  return `vooj-eyebrow transition-colors hover:text-vooj-ink ${
-    isActive ? 'text-vooj-ink' : 'text-vooj-ink/60'
+  return `vooj-eyebrow transition-colors ${
+    isActive ? 'text-vooj-bone' : 'text-vooj-bone/55 hover:text-vooj-bone'
   }`
 }
 
@@ -19,10 +20,16 @@ export default function Layout() {
 
   return (
     <div className="min-h-screen bg-vooj-bone text-vooj-ink flex flex-col">
-      <header className="relative border-b border-vooj-ink/15">
+      {/* Barra negra sólida a todo el ancho */}
+      <header className="relative bg-vooj-black text-vooj-bone">
         <div className="mx-auto max-w-6xl px-6 h-16 flex items-center justify-between">
-          <Link to="/" onClick={() => setAbierto(false)} aria-label="VOOJ — inicio">
-            <VoojBadge variant="mark" className="h-11 w-11" />
+          <Link
+            to="/"
+            onClick={() => setAbierto(false)}
+            aria-label="VOOJ — inicio"
+            className="shrink-0"
+          >
+            <VoojBadge variant="full" className="h-14" />
           </Link>
 
           {/* Navegación en desktop */}
@@ -43,26 +50,26 @@ export default function Layout() {
             className="md:hidden flex flex-col gap-[5px] p-2 -mr-2"
           >
             <span
-              className={`block h-px w-6 bg-vooj-ink transition-transform duration-200 ${
+              className={`block h-px w-6 bg-vooj-bone transition-transform duration-200 ${
                 abierto ? 'translate-y-[6px] rotate-45' : ''
               }`}
             />
             <span
-              className={`block h-px w-6 bg-vooj-ink transition-opacity duration-200 ${
+              className={`block h-px w-6 bg-vooj-bone transition-opacity duration-200 ${
                 abierto ? 'opacity-0' : ''
               }`}
             />
             <span
-              className={`block h-px w-6 bg-vooj-ink transition-transform duration-200 ${
+              className={`block h-px w-6 bg-vooj-bone transition-transform duration-200 ${
                 abierto ? '-translate-y-[6px] -rotate-45' : ''
               }`}
             />
           </button>
         </div>
 
-        {/* Panel desplegable en móvil */}
+        {/* Panel desplegable en móvil — también sobre negro */}
         {abierto && (
-          <nav className="md:hidden absolute inset-x-0 top-full z-20 flex flex-col gap-4 border-b border-vooj-ink/15 bg-vooj-bone px-6 py-5">
+          <nav className="md:hidden absolute inset-x-0 top-full z-20 flex flex-col gap-4 bg-vooj-black px-6 py-5">
             {navItems.map((item) => (
               <NavLink
                 key={item.to}

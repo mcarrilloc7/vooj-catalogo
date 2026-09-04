@@ -1,33 +1,34 @@
-import { Link } from 'react-router-dom'
-import VoojBadge from '../components/VoojBadge.jsx'
 import BannerCarrusel from '../components/BannerCarrusel.jsx'
-
-const enlaces = [
-  { to: '/catalogo', label: 'Catálogo' },
-  { to: '/nosotros', label: 'Nosotros' },
-  { to: '/contacto', label: 'Contacto' },
-]
+import PanelHome from '../components/PanelHome.jsx'
+import CategoriaCirculos from '../components/CategoriaCirculos.jsx'
+import { panelesHome } from '../data/panelesHome.js'
 
 export default function Home() {
   return (
-    <div className="min-h-screen bg-vooj-bone text-vooj-ink flex flex-col items-center px-6 py-16">
-      <VoojBadge className="w-full max-w-[280px] sm:max-w-[360px]" />
+    <div className="space-y-16">
+      {/* 3 columnas: paneles · carrusel · paneles (1 columna en móvil) */}
+      <section className="grid gap-4 lg:grid-cols-[1fr_1.9fr_1fr] lg:items-stretch">
+        <div className="order-2 flex flex-col gap-4 lg:order-1">
+          {panelesHome.izquierda.map((p) => (
+            <PanelHome key={p.id} panel={p} />
+          ))}
+        </div>
 
-      <div className="mt-10 w-full max-w-4xl">
-        <BannerCarrusel />
-      </div>
+        <div className="order-1 lg:order-2">
+          <BannerCarrusel />
+        </div>
 
-      <nav className="mt-12 flex flex-wrap justify-center gap-8">
-        {enlaces.map((e) => (
-          <Link
-            key={e.to}
-            to={e.to}
-            className="vooj-eyebrow text-vooj-ink/60 hover:text-vooj-ink transition-colors"
-          >
-            {e.label}
-          </Link>
-        ))}
-      </nav>
+        <div className="order-3 flex flex-col gap-4">
+          {panelesHome.derecha.map((p) => (
+            <PanelHome key={p.id} panel={p} />
+          ))}
+        </div>
+      </section>
+
+      {/* Círculos de categoría, centrados */}
+      <section>
+        <CategoriaCirculos />
+      </section>
     </div>
   )
 }

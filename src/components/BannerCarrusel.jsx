@@ -66,7 +66,7 @@ export default function BannerCarrusel() {
     <section
       aria-roledescription="carrusel"
       aria-label="Destacados"
-      className="relative w-full overflow-hidden border border-vooj-ink/12"
+      className="relative h-full w-full overflow-hidden"
       onMouseEnter={() => (pausado.current = true)}
       onMouseLeave={() => (pausado.current = false)}
       onFocusCapture={() => (pausado.current = true)}
