@@ -2,7 +2,6 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { supabase } from '../lib/supabase.js'
 import { primeraFoto } from '../lib/format.js'
-import PageHeading from '../components/PageHeading.jsx'
 import ProductoCard from '../components/ProductoCard.jsx'
 import FiltrosCatalogo from '../components/FiltrosCatalogo.jsx'
 
@@ -89,25 +88,29 @@ function CatalogoSkeleton() {
   )
 }
 
+// Estados sobre bloque negro: mismo peso visual que la home.
 function EstadoMensaje({ titulo, detalle }) {
   return (
-    <div className="py-24 text-center">
-      <p className="vooj-wordmark text-lg text-vooj-ink/80">{titulo}</p>
-      <p className="mt-4 text-sm font-light text-vooj-ink/50">{detalle}</p>
+    <div className="bg-vooj-black px-6 py-20 text-center text-vooj-bone">
+      <p className="vooj-wordmark text-lg text-vooj-bone">{titulo}</p>
+      <p className="mt-4 text-sm font-light text-vooj-bone/55">{detalle}</p>
     </div>
   )
 }
 
 function EstadoError({ onReintentar }) {
   return (
-    <div className="py-24 text-center">
-      <p className="vooj-wordmark text-lg text-vooj-ink/80">
+    <div className="bg-vooj-black px-6 py-20 text-center text-vooj-bone">
+      <p className="vooj-wordmark text-lg text-vooj-bone">
         No pudimos cargar el catálogo
       </p>
-      <p className="mt-4 text-sm font-light text-vooj-ink/50">
+      <p className="mt-4 text-sm font-light text-vooj-bone/55">
         Revisa tu conexión e inténtalo de nuevo en un momento.
       </p>
-      <button onClick={onReintentar} className="vooj-link mt-6">
+      <button
+        onClick={onReintentar}
+        className="mt-6 text-xs font-light text-vooj-bone/70 underline-offset-4 transition-colors hover:text-vooj-bone hover:underline"
+      >
         Reintentar
       </button>
     </div>
@@ -210,7 +213,12 @@ export default function Catalogo() {
 
   return (
     <div>
-      <PageHeading title="Catálogo" />
+      {/* Título como bloque negro acotado — sello de sección, no franja. */}
+      <div className="w-fit bg-vooj-black px-6 py-4">
+        <h1 className="vooj-wordmark -mr-[0.35em] text-2xl text-vooj-bone sm:text-3xl">
+          Catálogo
+        </h1>
+      </div>
 
       <div className="mt-12">
         {estado === 'cargando' && <CatalogoSkeleton />}

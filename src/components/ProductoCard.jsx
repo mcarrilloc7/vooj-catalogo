@@ -9,9 +9,13 @@ const RATIO = {
   ancho: 'aspect-[3/2]',
 }
 
-// Sin foto: el logo VOOJ ocupa el hueco (su fondo negro hace de mosaico).
+// Sin foto: bloque negro sólido con el monograma VOOJ centrado — carta
+// editorial deliberada, no un "falta la imagen". Igual en héroe, banda y
+// tarjeta normal (combina con los círculos de categoría, que usan el mismo).
 function FotoPlaceholder() {
-  return <VoojBadge alt="" className="absolute inset-0 h-full w-full" />
+  return (
+    <VoojBadge variant="mark" alt="" className="absolute inset-0 h-full w-full" />
+  )
 }
 
 export default function ProductoCard({ producto, variante = 'normal' }) {
