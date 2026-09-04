@@ -1,5 +1,6 @@
 import { jsPDF } from 'jspdf'
 import { formatPrecioMXN, primeraFoto } from './format.js'
+import { exportablesAPdf } from './inventario.js'
 
 /**
  * Exportación del catálogo a PDF. Se usa SÓLO desde /admin (vista ya
@@ -8,48 +9,67 @@ import { formatPrecioMXN, primeraFoto } from './format.js'
  * Diseño: fondo hueso, tipografía clara, negro reservado al sello de marca
  * y al mosaico de las piezas sin foto. Jerarquía igual que en las tarjetas
  * del catálogo: la foto manda, el nombre acompaña, el precio se retira.
- * A diferencia de la vitrina pública, aquí sí va la talla (herramienta de
- * trabajo, no escaparate).
+ * A diferencia de la vitrina pública, aquí van talla, existencias y
+ * descripción (herramienta de trabajo, no escaparate).
+ *
+ * Las piezas se agrupan por categoría, con un encabezado de sección sutil.
+ * El layout es de flujo: cada fila mide lo que necesita (una pieza sin
+ * descripción no deja hueco), y las páginas se cortan solas.
  */
 
 // ── Geometría (A4 vertical, mm) ──────────────────────────────────────────
 const PAGINA = { w: 210, h: 297 }
 const MARGEN = 16
 const CONTENIDO_W = PAGINA.w - MARGEN * 2
-const REJILLA_Y = 34 // arranca debajo del encabezado
-const LIMITE_INFERIOR = 281
+const CUERPO_Y = 34 // arranca debajo del encabezado de página
+const LIMITE_INFERIOR = 279
 const PIE_Y = 288
 
 const COLS = 3
 const GUTTER = 7
 const CELDA_W = (CONTENIDO_W - GUTTER * (COLS - 1)) / COLS
 const IMG_H = (CELDA_W * 4) / 3
-const TEXTO_H = 14
-const CELDA_H = IMG_H + TEXTO_H
-const FILA_GAP = 12
 
-// Filas que caben por página; si algún día cambia la geometría, se recalcula
-// solo — la paginación no está clavada a un número de productos.
-const FILAS = Math.max(
-  1,
-  Math.floor((LIMITE_INFERIOR - REJILLA_Y + FILA_GAP) / (CELDA_H + FILA_GAP)),
-)
-export const POR_PAGINA = COLS * FILAS
+// Ritmo vertical: el aire crece de dentro hacia fuera —
+// dentro de la ficha < entre filas < entre secciones.
+const GAP_IMG_TEXTO = 5.2
+const GAP_NOMBRE_PRECIO = 1.4
+const GAP_PRECIO_META = 1.2
+const GAP_META_DESC = 2.0
+const GAP_FILA = 11
+const GAP_SECCION = 17
+const GAP_TITULO_FILA = 6.5
+const ALTO_TITULO = 3.2 // del tope del bloque a la línea base del título
+
+// ── Tipografía ───────────────────────────────────────────────────────────
+const MM_POR_PT = 0.352778
+const FACTOR_LINEA = 1.32
+const lh = (pt) => pt * FACTOR_LINEA * MM_POR_PT
+
+const PT_NOMBRE = 9
+const PT_PRECIO = 8
+const PT_META = 6.8
+const PT_DESC = 6.8
+const PT_SECCION = 8.5
+
+const MAX_LINEAS_NOMBRE = 2
+const MAX_LINEAS_DESC = 2
 
 // ── Paleta ───────────────────────────────────────────────────────────────
 const HUESO = [245, 240, 232]
 const TINTA = [22, 21, 20]
 const GRIS = [120, 118, 114]
 const GRIS_CLARO = [152, 149, 145]
+const GRIS_TENUE = [170, 166, 161]
 const LINEA = [216, 210, 200]
 const NEGRO = [10, 10, 10]
 
 // ── Imágenes ─────────────────────────────────────────────────────────────
-// ~150 ppp al tamaño impreso de la celda: suficiente para verse bien sin
-// que el archivo se dispare.
+// ~150 ppp al tamaño impreso de la celda: se ve bien sin disparar el peso.
 const FOTO_PX = { w: 320, h: 427 }
 const MARCA_PX = { w: 160, h: 160 }
 const CALIDAD_JPEG = 0.72
+const CONCURRENCIA = 6
 
 function cargarImagen(src) {
   return new Promise((resolve, reject) => {
@@ -61,11 +81,6 @@ function cargarImagen(src) {
   })
 }
 
-/**
- * Redibuja la imagen a un lienzo del tamaño objetivo y la re-codifica como
- * JPEG. `contener` centra sin recortar (para el monograma); por defecto
- * recorta tipo object-cover (para las fotos de producto).
- */
 function normalizar(img, { w, h, contener = false }) {
   const lienzo = document.createElement('canvas')
   lienzo.width = w
@@ -85,7 +100,6 @@ function normalizar(img, { w, h, contener = false }) {
   return lienzo.toDataURL('image/jpeg', CALIDAD_JPEG)
 }
 
-/** Monograma VOOJ para el encabezado y para las piezas sin foto. */
 async function prepararMarca() {
   try {
     const img = await cargarImagen('/logo-vooj-mark.png')
@@ -98,13 +112,7 @@ async function prepararMarca() {
   }
 }
 
-const CONCURRENCIA = 6
-
-/**
- * Un data-URL por producto (foto normalizada o placeholder de marca).
- * Descarga en paralelo con tope de concurrencia y cachea por URL, así el
- * tiempo no crece linealmente cuando el catálogo tenga 50+ piezas.
- */
+/** Descarga en paralelo (con tope) y cachea por URL. */
 async function prepararFotos(productos, placeholder) {
   const urls = [
     ...new Set(productos.map((p) => primeraFoto(p.fotos)).filter(Boolean)),
@@ -133,6 +141,57 @@ async function prepararFotos(productos, placeholder) {
   }
   return porProducto
 }
+
+// ── Contenido de la ficha ────────────────────────────────────────────────
+function lineaMeta(producto) {
+  const n = Number(producto.existencias)
+  const stock = `${n} ${n === 1 ? 'disponible' : 'disponibles'}`
+  return producto.talla ? `${producto.talla} · ${stock}` : stock
+}
+
+function recortar(lineas, maximo) {
+  if (lineas.length <= maximo) return lineas
+  const cortadas = lineas.slice(0, maximo)
+  cortadas[maximo - 1] = `${cortadas[maximo - 1].replace(/\s+\S*$/, '')}…`
+  return cortadas
+}
+
+/** Mide el bloque de texto de una ficha (alto real, sin huecos fantasma). */
+function medir(doc, producto) {
+  doc.setFontSize(PT_NOMBRE)
+  const nombre = recortar(
+    doc.splitTextToSize(String(producto.nombre ?? ''), CELDA_W),
+    MAX_LINEAS_NOMBRE,
+  )
+
+  let descripcion = []
+  const textoDesc = String(producto.descripcion ?? '').trim()
+  if (textoDesc) {
+    doc.setFontSize(PT_DESC)
+    descripcion = recortar(
+      doc.splitTextToSize(textoDesc, CELDA_W),
+      MAX_LINEAS_DESC,
+    )
+  }
+
+  let alto = GAP_IMG_TEXTO + nombre.length * lh(PT_NOMBRE)
+  alto += GAP_NOMBRE_PRECIO + lh(PT_PRECIO)
+  alto += GAP_PRECIO_META + lh(PT_META)
+  if (descripcion.length) {
+    alto += GAP_META_DESC + descripcion.length * lh(PT_DESC)
+  }
+
+  return { nombre, descripcion, alto }
+}
+
+const ALTO_MINIMO_FICHA =
+  IMG_H +
+  GAP_IMG_TEXTO +
+  lh(PT_NOMBRE) +
+  GAP_NOMBRE_PRECIO +
+  lh(PT_PRECIO) +
+  GAP_PRECIO_META +
+  lh(PT_META)
 
 // ── Dibujo ───────────────────────────────────────────────────────────────
 function dibujarFondo(doc) {
@@ -165,14 +224,40 @@ function dibujarEncabezado(doc, sello, fechaTexto) {
   doc.line(MARGEN, 28, PAGINA.w - MARGEN, 28)
 }
 
-function dibujarPie(doc, pagina, total) {
-  doc.setFont('helvetica', 'normal')
-  doc.setFontSize(7)
-  doc.setTextColor(...GRIS_CLARO)
-  doc.text(`${pagina} / ${total}`, PAGINA.w / 2, PIE_Y, { align: 'center' })
+function dibujarPies(doc) {
+  const total = doc.getNumberOfPages()
+  for (let i = 1; i <= total; i++) {
+    doc.setPage(i)
+    doc.setFont('helvetica', 'normal')
+    doc.setFontSize(7)
+    doc.setTextColor(...GRIS_CLARO)
+    doc.text(`${i} / ${total}`, PAGINA.w / 2, PIE_Y, { align: 'center' })
+  }
 }
 
-function dibujarProducto(doc, producto, x, y, foto) {
+/** Encabezado de sección: nombre de categoría + filete fino hasta el margen. */
+function dibujarSeccion(doc, categoria, yTop) {
+  const base = yTop + ALTO_TITULO
+  const texto = String(categoria).toUpperCase()
+  const charSpace = 1.1
+
+  doc.setFont('helvetica', 'normal')
+  doc.setFontSize(PT_SECCION)
+  doc.setTextColor(...TINTA)
+  doc.text(texto, MARGEN, base, { charSpace })
+
+  const ancho = doc.getTextWidth(texto) + texto.length * charSpace
+  const xFilete = MARGEN + ancho + 5
+  if (xFilete < PAGINA.w - MARGEN) {
+    doc.setDrawColor(...LINEA)
+    doc.setLineWidth(0.2)
+    doc.line(xFilete, base - 1.1, PAGINA.w - MARGEN, base - 1.1)
+  }
+
+  return base + GAP_TITULO_FILA
+}
+
+function dibujarProducto(doc, producto, x, y, foto, medida) {
   if (foto) {
     doc.addImage(foto, 'JPEG', x, y, CELDA_W, IMG_H)
   } else {
@@ -180,30 +265,47 @@ function dibujarProducto(doc, producto, x, y, foto) {
     doc.rect(x, y, CELDA_W, IMG_H, 'F')
   }
 
-  // Nombre: máximo 2 líneas, el resto se recorta con elipsis.
   doc.setFont('helvetica', 'normal')
-  doc.setFontSize(9)
+  let ty = y + IMG_H + GAP_IMG_TEXTO
+
+  doc.setFontSize(PT_NOMBRE)
   doc.setTextColor(...TINTA)
-  const lineas = doc.splitTextToSize(String(producto.nombre ?? ''), CELDA_W)
-  const visibles = lineas.slice(0, 2)
-  if (lineas.length > 2) visibles[1] = `${visibles[1].slice(0, -1)}…`
+  doc.text(medida.nombre, x, ty)
+  ty += medida.nombre.length * lh(PT_NOMBRE)
 
-  let ty = y + IMG_H + 5.4
-  doc.text(visibles, x, ty)
-  ty += visibles.length > 1 ? 8.4 : 4.6
-
-  doc.setFontSize(8)
+  ty += GAP_NOMBRE_PRECIO
+  doc.setFontSize(PT_PRECIO)
   doc.setTextColor(...GRIS)
   doc.text(formatPrecioMXN(producto.precio), x, ty)
+  ty += lh(PT_PRECIO)
 
-  if (producto.talla) {
-    doc.setFontSize(7)
-    doc.setTextColor(...GRIS_CLARO)
-    doc.text(String(producto.talla), x + CELDA_W, ty, { align: 'right' })
+  ty += GAP_PRECIO_META
+  doc.setFontSize(PT_META)
+  doc.setTextColor(...GRIS_CLARO)
+  doc.text(lineaMeta(producto), x, ty)
+  ty += lh(PT_META)
+
+  if (medida.descripcion.length) {
+    ty += GAP_META_DESC
+    doc.setFontSize(PT_DESC)
+    doc.setTextColor(...GRIS_TENUE)
+    doc.text(medida.descripcion, x, ty)
   }
 }
 
+function agruparPorCategoria(productos) {
+  const grupos = new Map()
+  for (const p of productos) {
+    const categoria = String(p.categoria ?? '').trim() || 'Sin categoría'
+    if (!grupos.has(categoria)) grupos.set(categoria, [])
+    grupos.get(categoria).push(p)
+  }
+  return [...grupos.entries()].sort((a, b) => a[0].localeCompare(b[0], 'es'))
+}
+
 // ── API ──────────────────────────────────────────────────────────────────
+export { exportablesAPdf }
+
 export function nombreArchivoPdf(fecha = new Date()) {
   const dosDigitos = (n) => String(n).padStart(2, '0')
   const y = fecha.getFullYear()
@@ -214,49 +316,79 @@ export function nombreArchivoPdf(fecha = new Date()) {
 
 /** Construye el documento. Devuelve el jsPDF (sin descargarlo). */
 export async function generarPdfCatalogo(productos) {
+  const lista = exportablesAPdf(productos)
+
   const doc = new jsPDF({
     unit: 'mm',
     format: 'a4',
     orientation: 'portrait',
     compress: true,
   })
+  doc.setLineHeightFactor(FACTOR_LINEA)
 
   const { sello, placeholder } = await prepararMarca()
-  const fotos = await prepararFotos(productos, placeholder)
+  const fotos = await prepararFotos(lista, placeholder)
 
   const fechaTexto = new Date().toLocaleDateString('es-MX', {
     day: '2-digit',
     month: 'long',
     year: 'numeric',
   })
-  const totalPaginas = Math.max(1, Math.ceil(productos.length / POR_PAGINA))
 
-  for (let pagina = 0; pagina < totalPaginas; pagina++) {
-    if (pagina > 0) doc.addPage()
+  let primera = true
+  const abrirPagina = () => {
+    if (!primera) doc.addPage()
+    primera = false
     dibujarFondo(doc)
     dibujarEncabezado(doc, sello, `Catálogo · ${fechaTexto}`)
-
-    const lote = productos.slice(pagina * POR_PAGINA, (pagina + 1) * POR_PAGINA)
-    lote.forEach((producto, i) => {
-      const col = i % COLS
-      const fila = Math.floor(i / COLS)
-      const x = MARGEN + col * (CELDA_W + GUTTER)
-      const y = REJILLA_Y + fila * (CELDA_H + FILA_GAP)
-      dibujarProducto(doc, producto, x, y, fotos.get(producto.id))
-    })
-
-    dibujarPie(doc, pagina + 1, totalPaginas)
+    return CUERPO_Y
   }
 
-  if (productos.length === 0) {
+  let y = abrirPagina()
+
+  if (lista.length === 0) {
     doc.setFont('helvetica', 'normal')
     doc.setFontSize(10)
     doc.setTextColor(...GRIS)
-    doc.text('No hay piezas disponibles para exportar.', PAGINA.w / 2, 120, {
-      align: 'center',
-    })
+    doc.text(
+      'No hay piezas con existencias para exportar.',
+      PAGINA.w / 2,
+      120,
+      { align: 'center' },
+    )
+    dibujarPies(doc)
+    return doc
   }
 
+  for (const [categoria, items] of agruparPorCategoria(lista)) {
+    // Nunca dejar un título de sección huérfano al pie de la página.
+    if (y + ALTO_TITULO + GAP_TITULO_FILA + ALTO_MINIMO_FICHA > LIMITE_INFERIOR) {
+      y = abrirPagina()
+    }
+    y = dibujarSeccion(doc, categoria, y)
+
+    for (let i = 0; i < items.length; i += COLS) {
+      const fila = items.slice(i, i + COLS)
+      const medidas = fila.map((p) => medir(doc, p))
+      const altoFila = IMG_H + Math.max(...medidas.map((m) => m.alto))
+
+      if (y + altoFila > LIMITE_INFERIOR) {
+        y = abrirPagina()
+        y = dibujarSeccion(doc, categoria, y) // se repite al continuar
+      }
+
+      fila.forEach((producto, col) => {
+        const x = MARGEN + col * (CELDA_W + GUTTER)
+        dibujarProducto(doc, producto, x, y, fotos.get(producto.id), medidas[col])
+      })
+
+      y += altoFila + GAP_FILA
+    }
+
+    y += GAP_SECCION - GAP_FILA // el aire de sección sustituye al de fila
+  }
+
+  dibujarPies(doc)
   return doc
 }
 

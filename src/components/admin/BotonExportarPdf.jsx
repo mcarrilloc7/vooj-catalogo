@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useAuth } from '../../lib/auth.jsx'
+import { exportablesAPdf } from '../../lib/inventario.js'
 
 /**
  * Exporta a PDF las piezas visibles en el catálogo público (disponible = true).
@@ -14,7 +15,8 @@ export default function BotonExportarPdf({ productos }) {
 
   if (!session || !perfil) return null
 
-  const exportables = productos.filter((p) => p.disponible)
+  // Misma regla que el PDF: visible en el catálogo Y con existencias.
+  const exportables = exportablesAPdf(productos)
 
   async function handleExportar() {
     setEstado('generando')
@@ -43,8 +45,8 @@ export default function BotonExportarPdf({ productos }) {
         {estado === 'error'
           ? 'No se pudo generar el PDF. Inténtalo de nuevo.'
           : `${exportables.length} ${
-              exportables.length === 1 ? 'pieza visible' : 'piezas visibles'
-            }`}
+              exportables.length === 1 ? 'pieza' : 'piezas'
+            } con existencias`}
       </p>
     </div>
   )
