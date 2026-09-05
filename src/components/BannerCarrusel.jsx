@@ -11,24 +11,31 @@ function menosMovimiento() {
   )
 }
 
-function Slide({ slide }) {
+// `slide.imagen` (fijada a mano en banners.js) manda si existe; si no, se
+// usa la foto de producto calculada en Home (misma foto y degradado que los
+// paneles laterales, para que el carrusel se sienta parte del mismo bloque).
+function Slide({ slide, foto }) {
+  const [imgFallo, setImgFallo] = useState(false)
+  const src = slide.imagen || foto
+  const mostrarFoto = src && !imgFallo
+
   return (
     <Link
       to={slide.href}
       className="group relative block h-[260px] w-full shrink-0 sm:h-[340px]"
     >
-      {slide.imagen ? (
-        <>
-          <img
-            src={slide.imagen}
-            alt=""
-            className="absolute inset-0 h-full w-full object-cover"
-          />
-          <span className="absolute inset-0 bg-vooj-black/45" />
-        </>
+      {mostrarFoto ? (
+        <img
+          src={src}
+          alt=""
+          loading="lazy"
+          onError={() => setImgFallo(true)}
+          className="absolute inset-0 h-full w-full object-cover"
+        />
       ) : (
         <span className="absolute inset-0 bg-vooj-black" />
       )}
+      <span className="absolute inset-0 bg-gradient-to-t from-vooj-black/90 via-vooj-black/70 to-vooj-black/40" />
 
       <div className="relative flex h-full flex-col items-start justify-end gap-2 p-6 text-vooj-bone sm:p-10">
         {slide.eyebrow && (
@@ -48,7 +55,7 @@ function Slide({ slide }) {
   )
 }
 
-export default function BannerCarrusel() {
+export default function BannerCarrusel({ fotosPorHref = {} }) {
   const slides = banners
   const [i, setI] = useState(0)
   const pausado = useRef(false)
@@ -80,7 +87,7 @@ export default function BannerCarrusel() {
         style={{ transform: `translateX(-${i * 100}%)` }}
       >
         {slides.map((s) => (
-          <Slide key={s.id} slide={s} />
+          <Slide key={s.id} slide={s} foto={fotosPorHref[s.href]} />
         ))}
       </div>
 

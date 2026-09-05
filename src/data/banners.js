@@ -1,8 +1,10 @@
 /**
  * Slides del carrusel de la home. Para agregar o editar uno:
  *
- *  - imagen:  ruta a una imagen en /public (ej. '/banners/verano.jpg').
- *             null  ->  usa el panel oscuro con el sello VOOJ (placeholder).
+ *  - imagen:  ruta a una imagen en /public (ej. '/banners/verano.jpg') para
+ *             fijarla a mano. null -> se usa automáticamente una foto de
+ *             producto (de la categoría del href, o la más reciente si no
+ *             filtra categoría), igual que en los paneles de la home.
  *  - eyebrow: etiqueta corta en mayúsculas, arriba del título.
  *  - titulo:  dos o tres palabras, con gancho.
  *  - texto:   una línea de apoyo (opcional).
