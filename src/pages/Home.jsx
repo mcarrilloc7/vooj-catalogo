@@ -42,7 +42,7 @@ export default function Home() {
   )
 
   return (
-    <div className="space-y-16">
+    <div>
       {/* 3 columnas: paneles · carrusel · paneles (1 columna en móvil) */}
       <section className="grid gap-4 lg:grid-cols-[1fr_1.9fr_1fr] lg:items-stretch">
         <div className="order-2 flex flex-col gap-4 lg:order-1">
@@ -62,13 +62,16 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Círculos de categoría, centrados */}
-      <section>
+      {/* Círculos de categoría, centrados. Más aire que el resto: salen del
+          bloque denso del mosaico hacia algo más liviano, y ahora son
+          bastante más grandes que antes. */}
+      <section className="mt-16 sm:mt-20 md:mt-24">
         <CategoriaCirculos />
       </section>
 
-      {/* Lema de marca, cierre de la home */}
-      <section>
+      {/* Lema de marca, cierre de la home — un respiro más corto que el de
+          arriba, para que se sienta como remate y no como otro bloque. */}
+      <section className="mt-14 sm:mt-16 md:mt-20">
         <p className="vooj-wordmark text-center text-xs text-vooj-ink/45 sm:text-sm">
           Pocas piezas, bien elegidas
         </p>

@@ -45,14 +45,14 @@ export default function CategoriaCirculos() {
   if (categorias.length === 0) return null
 
   return (
-    <div className="flex flex-wrap justify-center gap-x-8 gap-y-6">
+    <div className="flex flex-wrap justify-center gap-x-6 gap-y-8 sm:gap-x-8 md:gap-x-10 md:gap-y-10 lg:gap-x-12">
       {categorias.map(({ categoria, thumb }) => (
         <Link
           key={categoria}
           to={`/catalogo?categoria=${encodeURIComponent(categoria)}`}
-          className="group flex w-20 flex-col items-center gap-2"
+          className="group flex w-24 flex-col items-center gap-2.5 sm:w-28 md:w-32 lg:w-36"
         >
-          <span className="block h-16 w-16 overflow-hidden rounded-full">
+          <span className="block h-20 w-20 overflow-hidden rounded-full transition-shadow duration-300 group-hover:shadow-lg sm:h-24 sm:w-24 md:h-28 md:w-28 lg:h-32 lg:w-32">
             {thumb ? (
               <img
                 src={thumb}
@@ -64,7 +64,7 @@ export default function CategoriaCirculos() {
               <VoojBadge variant="mark" alt="" className="h-full w-full" />
             )}
           </span>
-          <span className="text-xs font-light leading-tight text-center text-vooj-ink/60 transition-colors group-hover:text-vooj-ink">
+          <span className="text-xs font-light leading-tight text-center text-vooj-ink/60 transition-colors group-hover:text-vooj-ink sm:text-sm">
             {categoria}
           </span>
         </Link>
