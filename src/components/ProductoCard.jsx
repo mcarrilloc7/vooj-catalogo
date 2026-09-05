@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { formatPrecioMXN, primeraFoto } from '../lib/format.js'
+import { colorAHex, formatPrecioMXN, primeraFoto } from '../lib/format.js'
 import VoojBadge from './VoojBadge.jsx'
 
 // El recorte de la foto cambia según el papel de la pieza en el grid.
@@ -43,7 +43,7 @@ export default function ProductoCard({
             alt={producto.nombre}
             loading="lazy"
             onError={() => setImgFallo(true)}
-            className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
+            className="h-full w-full object-cover transition-transform duration-500 [@media(hover:hover)]:group-hover:scale-[1.03]"
           />
         ) : (
           <FotoPlaceholder />
@@ -57,16 +57,55 @@ export default function ProductoCard({
 
       {/* Nombre lleva el peso; el precio se retira. */}
       <div className="mt-4 shrink-0">
-        <h3 className="text-[0.9375rem] font-normal leading-snug text-vooj-ink">
-          {producto.nombre}
-        </h3>
-        <p className="mt-1.5 text-[0.8125rem] font-light tabular-nums text-vooj-ink/50">
-          {formatPrecioMXN(producto.precio)}
-        </p>
+        <div className="flex items-center gap-2">
+          <h3 className="text-[0.9375rem] font-normal leading-snug text-vooj-ink">
+            {producto.nombre}
+          </h3>
+          {/* Puntito de color — sólo visual, no interactivo. */}
+          {producto.color && (
+            <span
+              role="img"
+              aria-label={`Color: ${producto.color}`}
+              title={producto.color}
+              className="inline-block h-2.5 w-2.5 shrink-0 rounded-full border border-vooj-ink/15"
+              style={{ backgroundColor: colorAHex(producto.color) ?? 'transparent' }}
+            />
+          )}
+        </div>
+
+        {producto.precio_oferta != null ? (
+          <p className="mt-1.5 flex items-center gap-2 text-[0.8125rem] font-light tabular-nums">
+            <span className="text-vooj-ink/40 line-through">
+              {formatPrecioMXN(producto.precio)}
+            </span>
+            <span className="text-vooj-ink">
+              {formatPrecioMXN(producto.precio_oferta)}
+            </span>
+          </p>
+        ) : (
+          <p className="mt-1.5 text-[0.8125rem] font-light tabular-nums text-vooj-ink/50">
+            {formatPrecioMXN(producto.precio)}
+          </p>
+        )}
+
         {/* Código para pedir por WhatsApp — dato meta, no protagonista. */}
         {mostrarSku && producto.sku && (
           <p className="vooj-meta mt-1 font-mono">{producto.sku}</p>
         )}
+
+        {/* Única interacción de la tarjeta: texto discreto, no un botón.
+            El link en sí lo pone quien use ProductoCard (ver Rejilla en
+            Catalogo.jsx); acá sólo reacciona al hover de toda la tarjeta
+            (group-hover), no sólo al pasar por encima de estas palabras.
+            El hover queda envuelto en [@media(hover:hover)]: en touch, que
+            no tiene hover real, esta regla ni siquiera existe — así el
+            navegador no tiene ningún :hover que "probar" antes del click,
+            y el primer toque navega directo (ver diagnóstico: sin esto,
+            algunos navegadores móviles piden un primer toque "fantasma"
+            para simular el hover y recién el segundo hace clic). */}
+        <p className="mt-2 text-xs font-light text-vooj-ink/55 underline-offset-4 transition-colors [@media(hover:hover)]:group-hover:text-vooj-ink [@media(hover:hover)]:group-hover:underline">
+          Ver prenda
+        </p>
       </div>
     </article>
   )

@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { supabase } from '../lib/supabase.js'
-import { primeraFoto } from '../lib/format.js'
+import { esReciente, primeraFoto } from '../lib/format.js'
 import ProductoCard from '../components/ProductoCard.jsx'
 import FiltrosCatalogo from '../components/FiltrosCatalogo.jsx'
 import CategoriaFila from '../components/CategoriaFila.jsx'
@@ -37,6 +37,20 @@ const BANDA = 'col-span-full'
 // es lo mismo que "más nuevos"): con precio asc/desc, `destacar=false`
 // evita presentar los 3 productos más baratos/caros como si fueran
 // "recién llegados".
+// Toda tarjeta del catálogo enlaza a la ficha de producto (/catalogo/:sku)
+// — "Ver prenda" en la tarjeta apunta acá.
+function TarjetaEnlazada({ producto, variante }) {
+  return (
+    <Link to={`/catalogo/${encodeURIComponent(producto.sku)}`}>
+      <ProductoCard
+        producto={producto}
+        variante={variante}
+        etiqueta={esReciente(producto.actualizado_en) ? 'Nuevo' : null}
+      />
+    </Link>
+  )
+}
+
 function Rejilla({ productos, destacar }) {
   const conDestacado = destacar && productos.length >= 3
   const destacado = conDestacado ? productos.slice(0, 3) : []
@@ -48,7 +62,7 @@ function Rejilla({ productos, destacar }) {
       {conDestacado && (
         <div className="mb-14 grid grid-cols-1 gap-6 md:grid-cols-2">
           <div className="animate-fade-up">
-            <ProductoCard producto={destacado[0]} variante="hero" />
+            <TarjetaEnlazada producto={destacado[0]} variante="hero" />
           </div>
           <div className="flex flex-col justify-between gap-6">
             {destacado.slice(1).map((p, k) => (
@@ -57,7 +71,7 @@ function Rejilla({ productos, destacar }) {
                 className="animate-fade-up"
                 style={{ animationDelay: `${(k + 1) * 45}ms` }}
               >
-                <ProductoCard producto={p} variante="ancho" />
+                <TarjetaEnlazada producto={p} variante="ancho" />
               </div>
             ))}
           </div>
@@ -74,7 +88,7 @@ function Rejilla({ productos, destacar }) {
               className={`animate-fade-up ${banda ? BANDA : ''}`}
               style={{ animationDelay: `${Math.min(k * 25, 250)}ms` }}
             >
-              <ProductoCard producto={p} variante={banda ? 'ancho' : 'normal'} />
+              <TarjetaEnlazada producto={p} variante={banda ? 'ancho' : 'normal'} />
             </div>
           )
         })}
@@ -226,7 +240,7 @@ export default function Catalogo() {
       const { data, error } = await supabase
         .from('productos')
         .select(
-          'id, sku, nombre, descripcion, precio, categoria, talla, color, coleccion, fotos, actualizado_en',
+          'id, sku, nombre, descripcion, precio, precio_oferta, categoria, talla, color, coleccion, fotos, actualizado_en',
         )
         .eq('disponible', true)
         .order('actualizado_en', { ascending: false })
