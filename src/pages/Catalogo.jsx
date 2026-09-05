@@ -1,17 +1,23 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
-import { useSearchParams } from 'react-router-dom'
+import { useEffect, useMemo, useState } from 'react'
+import { Link, useSearchParams } from 'react-router-dom'
 import { supabase } from '../lib/supabase.js'
 import { primeraFoto } from '../lib/format.js'
 import ProductoCard from '../components/ProductoCard.jsx'
 import FiltrosCatalogo from '../components/FiltrosCatalogo.jsx'
+import CategoriaFila from '../components/CategoriaFila.jsx'
 
-// A ancho completo hay que subir columnas en pantallas grandes para que la
-// tarjeta no se vuelva gigante (~290px de ancho es el objetivo).
+// Auto-fill en vez de columnas fijas por breakpoint: desde que hay sidebar
+// (lg+), el grid ya no es todo el ancho de la página, así que un conteo de
+// columnas fijo por viewport se apretaría contra el panel. Con minmax cada
+// tarjeta busca ~220px y el navegador acomoda cuantas entren en el espacio
+// real que quede (con o sin sidebar).
 const GRID =
-  'grid grid-cols-2 md:grid-cols-4 2xl:grid-cols-5 min-[1900px]:grid-cols-6 gap-x-3 sm:gap-x-6 gap-y-14'
+  'grid grid-cols-2 sm:grid-cols-[repeat(auto-fill,minmax(220px,1fr))] gap-x-3 sm:gap-x-6 gap-y-14'
 
-// La banda ocupa la fila completa en cada breakpoint.
-const BANDA = 'col-span-2 md:col-span-4 2xl:col-span-5 min-[1900px]:col-span-6'
+// Antes eran spans fijos por breakpoint (frágil con auto-fill, que no tiene
+// un número de columnas conocido de antemano); col-span-full es correcto
+// para cualquier cantidad de columnas.
+const BANDA = 'col-span-full'
 
 // Peso visual por recencia (sin tocar la BD):
 //  - Las 3 piezas más recientes forman una fila destacada: 1 grande + 2
@@ -129,7 +135,7 @@ export default function Catalogo() {
   const [estado, setEstado] = useState('cargando') // 'cargando' | 'ok' | 'error'
   const [productos, setProductos] = useState([])
   const [params] = useSearchParams()
-  const filtrosRef = useRef(null)
+  const [filtrosAbiertos, setFiltrosAbiertos] = useState(false)
 
   useEffect(() => {
     let cancelado = false
@@ -207,15 +213,7 @@ export default function Catalogo() {
   }, [productos, fQ, fCategoria, fTalla, fMin, fMax])
 
   const claveGrid = `${fQ}|${fCategoria}|${fTalla}|${fMin}|${fMax}`
-
-  // Al cambiar los filtros, si la barra quedó por encima del viewport,
-  // volvemos a ella con scroll suave (nada de saltos bruscos).
-  useEffect(() => {
-    const el = filtrosRef.current
-    if (el && el.getBoundingClientRect().top < 0) {
-      el.scrollIntoView({ behavior: 'smooth', block: 'start' })
-    }
-  }, [claveGrid])
+  const filtrosActivos = [fQ, fCategoria, fTalla, fMin, fMax].filter(Boolean).length
 
   const conFiltros = estado === 'ok' && productos.length > 0
 
@@ -223,61 +221,133 @@ export default function Catalogo() {
     // -mt-8 recorta el py-16 del <main> sólo en esta vista: el bloque de
     // título queda cerca del header en vez de flotando.
     <div className="-mt-8">
-      {/* ENCABEZADO — centrado como grupo dentro del ancho completo.
-          El grid de productos queda fuera y sigue a ancho completo. */}
-      <header className="flex flex-col items-center">
-        {/* Título como bloque negro acotado — sello de sección, no franja. */}
-        <div className="w-fit bg-vooj-black px-6 py-4">
-          <h1 className="vooj-wordmark -mr-[0.35em] text-2xl text-vooj-bone sm:text-3xl">
+      {/* Breadcrumb discreto — la única referencia a "dónde estoy" ahora
+          que el título de abajo pesa menos. Usa el nombre de categoría tal
+          como vive en la URL/BD, sin inventar niveles de taxonomía. */}
+      <nav aria-label="Ruta de navegación" className="mb-3 text-xs font-light text-vooj-ink/45">
+        <Link to="/" className="transition-colors hover:text-vooj-ink">
+          Inicio
+        </Link>
+        <span className="mx-1.5">/</span>
+        {fCategoria ? (
+          <Link to="/catalogo" className="transition-colors hover:text-vooj-ink">
             Catálogo
-          </h1>
-        </div>
+          </Link>
+        ) : (
+          <span className="text-vooj-ink/65">Catálogo</span>
+        )}
+        {fCategoria && (
+          <>
+            <span className="mx-1.5">/</span>
+            <span className="text-vooj-ink/65">{fCategoria}</span>
+          </>
+        )}
+      </nav>
 
-        {/* El contador va pegado al título: título + dato = una unidad. */}
+      {/* Título — ya no es el bloque negro protagonista de antes; el
+          breadcrumb de arriba y el sidebar de filtros llevan más peso. */}
+      <header className="flex items-baseline gap-3">
+        <h1 className="vooj-wordmark text-xl text-vooj-ink sm:text-2xl">Catálogo</h1>
         {conFiltros && (
-          <p className="vooj-meta mt-3">
+          <p className="vooj-meta">
             {filtrados.length} {filtrados.length === 1 ? 'pieza' : 'piezas'}
           </p>
         )}
-
-        {conFiltros && (
-          <div ref={filtrosRef} className="mt-6 w-full scroll-mt-20">
-            <FiltrosCatalogo
-              categorias={categoriasConThumb}
-              tallas={tallas}
-              precioMin={precioMin}
-              precioMax={precioMax}
-            />
-          </div>
-        )}
       </header>
 
-      <div className={conFiltros ? undefined : 'mt-10'}>
-        {estado === 'cargando' && <CatalogoSkeleton />}
+      {/* Círculos de categoría — navegación a todo el ancho, arriba tanto
+          del sidebar como del grid. No es parte del sidebar de filtros:
+          es la forma primaria de moverse entre categorías. */}
+      {conFiltros && (
+        <div className="mt-8">
+          <CategoriaFila categorias={categoriasConThumb} />
+        </div>
+      )}
 
-        {estado === 'error' && (
-          <EstadoError onReintentar={() => window.location.reload()} />
-        )}
+      {conFiltros && (
+        <div className="mt-8 lg:hidden">
+          <button
+            type="button"
+            onClick={() => setFiltrosAbiertos(true)}
+            className="vooj-btn"
+          >
+            Filtros{filtrosActivos > 0 ? ` · ${filtrosActivos}` : ''}
+          </button>
+        </div>
+      )}
 
-        {estado === 'ok' && productos.length === 0 && (
-          <EstadoMensaje
-            titulo="Colección en preparación"
-            detalle="Muy pronto vas a poder ver aquí nuestras piezas."
-          />
-        )}
-
+      <div className="mt-8 lg:mt-10 lg:grid lg:grid-cols-[240px_1fr] lg:items-start lg:gap-10">
         {conFiltros && (
           <>
-            {filtrados.length === 0 ? (
-              <EstadoMensaje
-                titulo="Sin resultados"
-                detalle="Prueba con otra combinación de filtros."
+            {/* Fondo oscuro detrás del panel, sólo tablet/móvil y sólo
+                mientras está abierto. */}
+            {filtrosAbiertos && (
+              <button
+                type="button"
+                aria-label="Cerrar filtros"
+                onClick={() => setFiltrosAbiertos(false)}
+                className="fixed inset-0 z-40 bg-vooj-black/40 lg:hidden"
               />
-            ) : (
-              <Rejilla key={claveGrid} productos={filtrados} />
             )}
+
+            {/* Panel de filtros: drawer fijo en tablet/móvil (se desliza
+                desde la izquierda), sidebar sticky de toda la vida en
+                desktop/iPad horizontal (lg+). */}
+            <aside
+              className={`fixed inset-y-0 left-0 z-50 w-[85vw] max-w-xs overflow-y-auto bg-vooj-bone p-6
+                transition-transform duration-300 ease-out
+                lg:sticky lg:inset-auto lg:top-24 lg:z-auto lg:w-auto lg:max-w-none lg:translate-x-0
+                lg:max-h-[calc(100vh-7rem)] lg:overflow-y-auto lg:bg-transparent lg:p-0
+                ${filtrosAbiertos ? 'translate-x-0' : '-translate-x-full'}`}
+            >
+              <div className="mb-6 flex items-center justify-between lg:hidden">
+                <p className="vooj-eyebrow text-vooj-ink/75">Filtros</p>
+                <button
+                  type="button"
+                  onClick={() => setFiltrosAbiertos(false)}
+                  aria-label="Cerrar filtros"
+                  className="text-lg leading-none text-vooj-ink/60 hover:text-vooj-ink"
+                >
+                  ✕
+                </button>
+              </div>
+
+              <FiltrosCatalogo
+                tallas={tallas}
+                precioMin={precioMin}
+                precioMax={precioMax}
+              />
+            </aside>
           </>
         )}
+
+        <div>
+          {estado === 'cargando' && <CatalogoSkeleton />}
+
+          {estado === 'error' && (
+            <EstadoError onReintentar={() => window.location.reload()} />
+          )}
+
+          {estado === 'ok' && productos.length === 0 && (
+            <EstadoMensaje
+              titulo="Colección en preparación"
+              detalle="Muy pronto vas a poder ver aquí nuestras piezas."
+            />
+          )}
+
+          {conFiltros && (
+            <>
+              {filtrados.length === 0 ? (
+                <EstadoMensaje
+                  titulo="Sin resultados"
+                  detalle="Prueba con otra combinación de filtros."
+                />
+              ) : (
+                <Rejilla key={claveGrid} productos={filtrados} />
+              )}
+            </>
+          )}
+        </div>
       </div>
     </div>
   )

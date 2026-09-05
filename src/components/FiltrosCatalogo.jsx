@@ -1,5 +1,4 @@
 import { useSearchParams } from 'react-router-dom'
-import VoojBadge from './VoojBadge.jsx'
 
 // Talla: sin recuadro. Sólo texto; se subraya al elegirse.
 function Talla({ activo, onClick, children }) {
@@ -19,55 +18,27 @@ function Talla({ activo, onClick, children }) {
   )
 }
 
-function CirculoCategoria({ categoria, thumb, activo, onClick }) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      aria-pressed={activo}
-      className="shrink-0 flex w-20 flex-col items-center gap-2"
-    >
-      <span
-        className={`block h-16 w-16 overflow-hidden rounded-full transition-[box-shadow] ${
-          activo ? 'ring-1 ring-vooj-ink ring-offset-2 ring-offset-vooj-bone' : ''
-        }`}
-      >
-        {thumb ? (
-          <img
-            src={thumb}
-            alt=""
-            loading="lazy"
-            className="h-full w-full object-cover"
-          />
-        ) : (
-          <VoojBadge variant="mark" alt="" className="h-full w-full" />
-        )}
-      </span>
-      <span
-        className={`text-xs font-light text-center leading-tight ${
-          activo ? 'text-vooj-ink' : 'text-vooj-ink/50'
-        }`}
-      >
-        {categoria}
-      </span>
-    </button>
-  )
-}
-
 /**
- * Barra de filtros de /catalogo. Todo el estado vive en los query params
- * de la URL (q, categoria, talla, min, max) para que un link con filtros
- * se abra igual. Se combinan con AND.
+ * Filtros de /catalogo (Talla, Precio — y lo que se sume), en formato de
+ * lista vertical (sidebar fija en desktop, contenido del drawer en
+ * tablet/móvil — el layout que la envuelve lo decide Catalogo.jsx, este
+ * componente sólo apila hacia abajo). La categoría NO vive acá: es
+ * navegación (la fila de círculos, siempre visible arriba de las 2
+ * columnas — ver CategoriaFila.jsx), no tiene sentido repetirla como
+ * filtro más en el sidebar.
+ *
+ * Todo el estado vive en los query params de la URL (q, categoria, talla,
+ * min, max) para que un link con filtros se abra igual. Se combinan con
+ * AND — el de categoría lo escribe CategoriaFila.jsx, pero "Limpiar
+ * filtros" de acá abajo limpia los 5 por igual.
  *
  * props:
- *  - categorias: [{ categoria, thumb }]  (thumb = 1ª foto de esa categoría o null)
  *  - tallas: string[]  (valores distintos)
  *  - precioMin, precioMax: rango real de precios (para los placeholders)
  *
  * El contador de piezas vive en Catalogo.jsx, pegado al bloque de título.
  */
 export default function FiltrosCatalogo({
-  categorias,
   tallas,
   precioMin,
   precioMax,
@@ -95,101 +66,79 @@ export default function FiltrosCatalogo({
   const hayFiltros = Boolean(q || categoria || talla || min || max)
 
   const inputPrecio =
-    'w-16 bg-transparent border-0 border-b border-vooj-ink/25 px-0 py-1 text-sm ' +
+    'w-full bg-transparent border-0 border-b border-vooj-ink/25 px-0 py-1 text-sm ' +
     'text-vooj-ink tabular-nums placeholder:text-vooj-ink/30 ' +
     'focus:outline-none focus:border-vooj-ink/60'
 
   return (
-    <div className="mb-14 space-y-7">
-      {/* Búsqueda — centrada como objeto, sin label */}
-      <input
-        type="search"
-        aria-label="Buscar por nombre"
-        value={q}
-        onChange={(e) => actualizar({ q: e.target.value })}
-        placeholder="Buscar por nombre…"
-        className="mx-auto block w-full max-w-xl bg-transparent border-0 border-b border-vooj-ink/25 px-0 py-2 text-sm text-vooj-ink placeholder:text-vooj-ink/35 focus:outline-none focus:border-vooj-ink/60"
-      />
+    <div className="space-y-8">
+      {/* Búsqueda */}
+      <div>
+        <p className="vooj-meta mb-1.5">buscar</p>
+        <input
+          type="search"
+          aria-label="Buscar por nombre"
+          value={q}
+          onChange={(e) => actualizar({ q: e.target.value })}
+          placeholder="Buscar por nombre…"
+          className="block w-full bg-transparent border-0 border-b border-vooj-ink/25 px-0 py-2 text-sm text-vooj-ink placeholder:text-vooj-ink/35 focus:outline-none focus:border-vooj-ink/60"
+        />
+      </div>
 
-      {/* Categoría — fila centrada; si no cabe, hace scroll desde la izquierda */}
-      {categorias.length > 0 && (
-        <div
-          role="group"
-          aria-label="Categoría"
-          className="overflow-x-auto pb-1 no-scrollbar"
-        >
-          <div className="mx-auto flex w-max gap-4">
-            {categorias.map((c) => (
-              <CirculoCategoria
-                key={c.categoria}
-                categoria={c.categoria}
-                thumb={c.thumb}
-                activo={categoria === c.categoria}
-                onClick={() => alternar('categoria', c.categoria)}
-              />
+      {/* Talla */}
+      {tallas.length > 0 && (
+        <div>
+          <p className="vooj-meta mb-2">talla</p>
+          <div className="flex flex-wrap gap-x-4 gap-y-1">
+            {tallas.map((t) => (
+              <Talla
+                key={t}
+                activo={talla === t}
+                onClick={() => alternar('talla', t)}
+              >
+                {t}
+              </Talla>
             ))}
           </div>
         </div>
       )}
 
-      <div className="flex flex-wrap items-end justify-center gap-x-10 gap-y-6">
-        {/* Talla */}
-        {tallas.length > 0 && (
-          <div className="text-center">
-            <p className="vooj-meta mb-1">talla</p>
-            <div className="flex flex-wrap justify-center gap-x-4">
-              {tallas.map((t) => (
-                <Talla
-                  key={t}
-                  activo={talla === t}
-                  onClick={() => alternar('talla', t)}
-                >
-                  {t}
-                </Talla>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Precio */}
-        <div className="text-center">
-          <p className="vooj-meta mb-1">precio · mxn</p>
-          <div className="flex items-center justify-center gap-3">
-            <input
-              type="number"
-              min="0"
-              inputMode="numeric"
-              aria-label="Precio mínimo"
-              value={min}
-              placeholder={precioMin != null ? String(precioMin) : 'mín'}
-              onChange={(e) => actualizar({ min: e.target.value })}
-              className={inputPrecio}
-            />
-            <span className="text-vooj-ink/30">—</span>
-            <input
-              type="number"
-              min="0"
-              inputMode="numeric"
-              aria-label="Precio máximo"
-              value={max}
-              placeholder={precioMax != null ? String(precioMax) : 'máx'}
-              onChange={(e) => actualizar({ max: e.target.value })}
-              className={inputPrecio}
-            />
-          </div>
+      {/* Precio */}
+      <div>
+        <p className="vooj-meta mb-2">precio · mxn</p>
+        <div className="flex items-center gap-3">
+          <input
+            type="number"
+            min="0"
+            inputMode="numeric"
+            aria-label="Precio mínimo"
+            value={min}
+            placeholder={precioMin != null ? String(precioMin) : 'mín'}
+            onChange={(e) => actualizar({ min: e.target.value })}
+            className={inputPrecio}
+          />
+          <span className="text-vooj-ink/30">—</span>
+          <input
+            type="number"
+            min="0"
+            inputMode="numeric"
+            aria-label="Precio máximo"
+            value={max}
+            placeholder={precioMax != null ? String(precioMax) : 'máx'}
+            onChange={(e) => actualizar({ max: e.target.value })}
+            className={inputPrecio}
+          />
         </div>
       </div>
 
       {hayFiltros && (
-        <div className="text-center">
-          <button
-            type="button"
-            onClick={() => setParams({}, { replace: true })}
-            className="vooj-link"
-          >
-            Limpiar filtros
-          </button>
-        </div>
+        <button
+          type="button"
+          onClick={() => setParams({}, { replace: true })}
+          className="vooj-link"
+        >
+          Limpiar filtros
+        </button>
       )}
     </div>
   )
