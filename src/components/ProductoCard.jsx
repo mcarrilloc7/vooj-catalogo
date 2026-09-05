@@ -18,7 +18,12 @@ function FotoPlaceholder() {
   )
 }
 
-export default function ProductoCard({ producto, variante = 'normal' }) {
+export default function ProductoCard({
+  producto,
+  variante = 'normal',
+  etiqueta = null,
+  mostrarSku = true,
+}) {
   const src = primeraFoto(producto.fotos)
   const [imgFallo, setImgFallo] = useState(false)
   const mostrarFoto = src && !imgFallo
@@ -43,6 +48,11 @@ export default function ProductoCard({ producto, variante = 'normal' }) {
         ) : (
           <FotoPlaceholder />
         )}
+        {etiqueta && (
+          <span className="absolute left-3 top-3 bg-vooj-bone px-2 py-1 text-[0.625rem] font-light uppercase tracking-wide2 text-vooj-ink">
+            {etiqueta}
+          </span>
+        )}
       </div>
 
       {/* Nombre lleva el peso; el precio se retira. */}
@@ -54,7 +64,7 @@ export default function ProductoCard({ producto, variante = 'normal' }) {
           {formatPrecioMXN(producto.precio)}
         </p>
         {/* Código para pedir por WhatsApp — dato meta, no protagonista. */}
-        {producto.sku && (
+        {mostrarSku && producto.sku && (
           <p className="vooj-meta mt-1 font-mono">{producto.sku}</p>
         )}
       </div>

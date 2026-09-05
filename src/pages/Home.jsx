@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import BannerCarrusel from '../components/BannerCarrusel.jsx'
 import PanelHome from '../components/PanelHome.jsx'
 import CategoriaCirculos from '../components/CategoriaCirculos.jsx'
+import RecienLlegados from '../components/RecienLlegados.jsx'
 import { panelesHome } from '../data/panelesHome.js'
 import { banners } from '../data/banners.js'
 import { supabase } from '../lib/supabase.js'
@@ -67,6 +68,12 @@ export default function Home() {
           bastante más grandes que antes. */}
       <section className="mt-16 sm:mt-20 md:mt-24">
         <CategoriaCirculos />
+      </section>
+
+      {/* Recién llegados — mismo peso de aire que el bloque anterior, ya
+          que es contenido nuevo, no un cierre. */}
+      <section className="mt-16 sm:mt-20 md:mt-24">
+        <RecienLlegados />
       </section>
 
       {/* Lema de marca, cierre de la home — un respiro más corto que el de
