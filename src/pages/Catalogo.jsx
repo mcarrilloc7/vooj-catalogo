@@ -461,24 +461,13 @@ export default function Catalogo() {
                 lg:max-h-[calc(100vh-7rem)] lg:overflow-y-auto lg:bg-transparent lg:p-0
                 ${filtrosAbiertos ? 'translate-x-0' : '-translate-x-full'}`}
             >
-              <div className="mb-6 flex items-center justify-between lg:hidden">
-                <p className="vooj-eyebrow text-vooj-ink/75">Filtros</p>
-                <button
-                  type="button"
-                  onClick={() => setFiltrosAbiertos(false)}
-                  aria-label="Cerrar filtros"
-                  className="text-lg leading-none text-vooj-ink/60 hover:text-vooj-ink"
-                >
-                  ✕
-                </button>
-              </div>
-
               <FiltrosCatalogo
                 tallas={tallas}
                 colores={colores}
                 colecciones={colecciones}
                 precioMin={precioMin}
                 precioMax={precioMax}
+                onCerrar={() => setFiltrosAbiertos(false)}
               />
             </aside>
           </>

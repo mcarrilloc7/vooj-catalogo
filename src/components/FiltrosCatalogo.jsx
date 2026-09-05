@@ -52,16 +52,19 @@ function Seccion({ titulo, abierto, onToggle, children }) {
  * lo decide Catalogo.jsx). La categoría NO vive acá: es navegación (la
  * fila de círculos, siempre visible arriba de las 2 columnas — ver
  * CategoriaFila.jsx); repetirla acá como filtro de texto sería
- * redundante con esa fila.
+ * redundante con esa fila, y por eso tampoco la toca "Limpiar todo".
  *
- * Todo el estado vive en los query params de la URL (q, categoria, talla,
- * color, coleccion, min, max) para que un link con filtros se abra igual.
- * Se combinan con AND — el de categoría lo escribe CategoriaFila.jsx,
- * pero "Limpiar filtros" de acá abajo limpia todos por igual.
+ * Todo el estado vive en los query params de la URL (q, talla, color,
+ * coleccion, min, max) para que un link con filtros se abra igual. Se
+ * combinan con AND.
  *
  * props:
  *  - tallas, colores, colecciones: string[]  (valores distintos)
  *  - precioMin, precioMax: rango real de precios (para los placeholders)
+ *  - onCerrar: opcional — sólo lo pasa Catalogo.jsx cuando este panel es
+ *    el drawer de tablet/móvil, para el botón de cerrar junto al
+ *    encabezado. En el sidebar de escritorio no se pasa y ese botón no
+ *    se renderiza.
  *
  * El contador de piezas y el orden viven en la barra de resultados, en
  * Catalogo.jsx — no acá.
@@ -72,6 +75,7 @@ export default function FiltrosCatalogo({
   colecciones,
   precioMin,
   precioMax,
+  onCerrar,
 }) {
   const [params, setParams] = useSearchParams()
   // Todas abiertas por defecto: es la migración natural del panel que ya
@@ -88,7 +92,6 @@ export default function FiltrosCatalogo({
     setAbiertas((a) => ({ ...a, [clave]: !a[clave] }))
 
   const q = params.get('q') || ''
-  const categoria = params.get('categoria') || ''
   const talla = params.get('talla') || ''
   const color = params.get('color') || ''
   const coleccion = params.get('coleccion') || ''
@@ -107,9 +110,18 @@ export default function FiltrosCatalogo({
   const alternar = (clave, valor) =>
     actualizar({ [clave]: params.get(clave) === valor ? '' : valor })
 
-  const hayFiltros = Boolean(
-    q || categoria || talla || color || coleccion || min || max,
-  )
+  // Sólo los 5 filtros que vive este panel — categoría (fila de círculos)
+  // y orden/página (barra de resultados) quedan fuera, tanto del gate de
+  // "hay algo que limpiar" como de "Limpiar todo" mismo.
+  const hayFiltros = Boolean(q || talla || color || coleccion || min || max)
+
+  function limpiarTodo() {
+    const next = new URLSearchParams(params)
+    for (const clave of ['q', 'talla', 'color', 'coleccion', 'min', 'max']) {
+      next.delete(clave)
+    }
+    setParams(next, { replace: true })
+  }
 
   const inputPrecio =
     'w-full bg-transparent border-0 border-b border-vooj-ink/25 px-0 py-1 text-sm ' +
@@ -118,6 +130,32 @@ export default function FiltrosCatalogo({
 
   return (
     <div>
+      {/* Encabezado maestro del panel — mismo tratamiento que los
+          títulos de sección de la marca (vooj-eyebrow), no el vooj-meta
+          discreto de "talla"/"color" de acá abajo: éste manda sobre
+          todo el panel. "Limpiar todo" vive al lado, no debajo, y sólo
+          aparece si de verdad hay algo que limpiar. */}
+      <div className="mb-6 flex items-center justify-between gap-3">
+        <p className="vooj-eyebrow text-vooj-ink/75">Filtros</p>
+        <div className="flex items-center gap-4">
+          {hayFiltros && (
+            <button type="button" onClick={limpiarTodo} className="vooj-link">
+              Limpiar todo
+            </button>
+          )}
+          {onCerrar && (
+            <button
+              type="button"
+              onClick={onCerrar}
+              aria-label="Cerrar filtros"
+              className="text-lg leading-none text-vooj-ink/60 hover:text-vooj-ink lg:hidden"
+            >
+              ✕
+            </button>
+          )}
+        </div>
+      </div>
+
       {/* Búsqueda — se queda fuera del acordeón, siempre visible */}
       <div className="pb-5">
         <p className="vooj-meta mb-1.5">buscar</p>
@@ -211,16 +249,6 @@ export default function FiltrosCatalogo({
             ))}
           </div>
         </Seccion>
-      )}
-
-      {hayFiltros && (
-        <button
-          type="button"
-          onClick={() => setParams({}, { replace: true })}
-          className="vooj-link mt-5 inline-block"
-        >
-          Limpiar filtros
-        </button>
       )}
     </div>
   )
