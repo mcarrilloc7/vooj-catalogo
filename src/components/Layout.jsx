@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { NavLink, Link, Outlet } from 'react-router-dom'
+import BuscadorHeader from './BuscadorHeader.jsx'
 
 const navItems = [
   { to: '/catalogo', label: 'Catálogo' },
@@ -16,17 +17,18 @@ function linkClase({ isActive }) {
 
 export default function Layout() {
   const [abierto, setAbierto] = useState(false)
+  const [buscadorMovil, setBuscadorMovil] = useState(false)
 
   return (
     <div className="min-h-screen bg-vooj-bone text-vooj-ink flex flex-col">
       {/* Barra negra sólida a todo el ancho */}
       <header className="relative bg-vooj-black text-vooj-bone">
-        <div className="w-full px-6 py-2 flex items-center justify-between">
+        <div className="w-full px-6 py-2 flex items-center gap-4">
           <Link
             to="/"
             onClick={() => setAbierto(false)}
             aria-label="VOOJ — inicio"
-            className="shrink-0"
+            className={buscadorMovil ? 'hidden shrink-0 xl:block' : 'shrink-0'}
           >
             {/* El lockup completo (logo-vooj.jpg) trae mucho aire arriba y
                 abajo del wordmark dentro de su lienzo cuadrado — acá se
@@ -46,8 +48,29 @@ export default function Layout() {
             </div>
           </Link>
 
-          {/* Navegación en desktop */}
-          <nav className="hidden md:flex gap-8">
+          <BuscadorHeader
+            movilAbierto={buscadorMovil}
+            onAbrirMovil={() => {
+              setBuscadorMovil(true)
+              setAbierto(false)
+            }}
+            onCerrarMovil={() => setBuscadorMovil(false)}
+          />
+
+          {/* Navegación en desktop — se oculta hasta `xl` mientras el
+              buscador está expandido en el rango tablet/laptop angosta
+              (768-1279px), para que la caja completa tenga lugar de sobra.
+              `ml-auto` la empuja al extremo derecho: el buscador de
+              escritorio ya no ocupa espacio en el flex a partir de `xl`
+              (queda centrado con `absolute` sobre todo el header), así que
+              nada más lo hace por ella ahí. */}
+          <nav
+            className={
+              buscadorMovil
+                ? 'hidden shrink-0 gap-8 xl:ml-auto xl:flex'
+                : 'hidden shrink-0 gap-8 md:ml-auto md:flex'
+            }
+          >
             {navItems.map((item) => (
               <NavLink key={item.to} to={item.to} className={linkClase}>
                 {item.label}
@@ -58,10 +81,17 @@ export default function Layout() {
           {/* Botón hamburguesa en móvil */}
           <button
             type="button"
-            onClick={() => setAbierto((v) => !v)}
+            onClick={() => {
+              setAbierto((v) => !v)
+              setBuscadorMovil(false)
+            }}
             aria-label="Menú"
             aria-expanded={abierto}
-            className="md:hidden flex flex-col gap-[5px] p-2 -mr-2"
+            className={
+              buscadorMovil
+                ? 'hidden'
+                : 'flex shrink-0 flex-col gap-[5px] p-2 -mr-2 md:hidden'
+            }
           >
             <span
               className={`block h-px w-6 bg-vooj-bone transition-transform duration-200 ${
