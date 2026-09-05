@@ -6,7 +6,7 @@ import ProductoForm from './ProductoForm.jsx'
 import BotonExportarPdf from './BotonExportarPdf.jsx'
 
 const COLUMNAS =
-  'id, sku, nombre, descripcion, precio, categoria, material, talla, existencias, disponible, fotos, actualizado_en'
+  'id, sku, nombre, descripcion, precio, precio_oferta, categoria, coleccion, material, color, talla, existencias, disponible, fotos, actualizado_en'
 
 export default function ProductosAdmin() {
   const [estado, setEstado] = useState('cargando') // 'cargando' | 'ok' | 'error'
@@ -144,7 +144,10 @@ export default function ProductosAdmin() {
                   <th className="py-3 pr-4 vooj-eyebrow text-vooj-ink/55 font-light">SKU</th>
                   <th className="py-3 pr-4 vooj-eyebrow text-vooj-ink/55 font-light">Nombre</th>
                   <th className="py-3 pr-4 vooj-eyebrow text-vooj-ink/55 font-light">Categoría</th>
+                  <th className="py-3 pr-4 vooj-eyebrow text-vooj-ink/55 font-light">Colección</th>
                   <th className="py-3 pr-4 vooj-eyebrow text-vooj-ink/55 font-light">Precio</th>
+                  <th className="py-3 pr-4 vooj-eyebrow text-vooj-ink/55 font-light">Oferta</th>
+                  <th className="py-3 pr-4 vooj-eyebrow text-vooj-ink/55 font-light">Color</th>
                   <th className="py-3 pr-4 vooj-eyebrow text-vooj-ink/55 font-light">Talla</th>
                   <th className="py-3 pr-4 vooj-eyebrow text-vooj-ink/55 font-light">Exist.</th>
                   <th className="py-3 pr-4 vooj-eyebrow text-vooj-ink/55 font-light">Fotos</th>
@@ -165,7 +168,12 @@ export default function ProductosAdmin() {
                     </td>
                     <td className="py-3 pr-4 text-vooj-ink/90">{p.nombre}</td>
                     <td className="py-3 pr-4 text-vooj-ink/70">{p.categoria}</td>
+                    <td className="py-3 pr-4 text-vooj-ink/70">{p.coleccion || '—'}</td>
                     <td className="py-3 pr-4 text-vooj-ink/70">{formatPrecioMXN(p.precio)}</td>
+                    <td className="py-3 pr-4 text-vooj-ink/70">
+                      {p.precio_oferta != null ? formatPrecioMXN(p.precio_oferta) : '—'}
+                    </td>
+                    <td className="py-3 pr-4 text-vooj-ink/70">{p.color || '—'}</td>
                     <td className="py-3 pr-4 text-vooj-ink/70">{p.talla || '—'}</td>
                     <td className="py-3 pr-4 text-vooj-ink/70">{p.existencias}</td>
                     <td className="py-3 pr-4 text-vooj-ink/70">{p.fotos?.length || 0}</td>

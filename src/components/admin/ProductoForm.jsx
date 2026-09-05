@@ -6,8 +6,11 @@ const VACIO = {
   nombre: '',
   descripcion: '',
   precio: '',
+  precio_oferta: '',
   categoria: '',
+  coleccion: '',
   material: '',
+  color: '',
   talla: '',
   existencias: '',
   disponible: true,
@@ -19,8 +22,11 @@ function desdeProducto(p) {
     nombre: p.nombre ?? '',
     descripcion: p.descripcion ?? '',
     precio: p.precio ?? '',
+    precio_oferta: p.precio_oferta ?? '',
     categoria: p.categoria ?? '',
+    coleccion: p.coleccion ?? '',
     material: p.material ?? '',
+    color: p.color ?? '',
     talla: p.talla ?? '',
     existencias: p.existencias ?? '',
     disponible: p.disponible ?? true,
@@ -112,6 +118,11 @@ export default function ProductoForm({ inicial, onGuardar, onCancelar, guardando
     const categoria = form.categoria.trim()
     const precio = Number(form.precio)
     const existencias = Number(form.existencias)
+    // form.precio_oferta puede llegar como number (valor original de la
+    // fila, si no se tocó el campo al editar) o como string (lo que sea
+    // que haya escrito el usuario) — String() normaliza antes de .trim().
+    const hayOferta = String(form.precio_oferta).trim() !== ''
+    const precioOferta = hayOferta ? Number(form.precio_oferta) : null
 
     if (!nombre || !categoria) {
       setError('Nombre y categoría son obligatorios.')
@@ -123,6 +134,14 @@ export default function ProductoForm({ inicial, onGuardar, onCancelar, guardando
     }
     if (!Number.isInteger(existencias) || existencias < 0) {
       setError('Las existencias deben ser un número entero (0 o más).')
+      return
+    }
+    if (hayOferta && (!Number.isFinite(precioOferta) || precioOferta < 0)) {
+      setError('El precio de oferta debe ser un número válido.')
+      return
+    }
+    if (hayOferta && precioOferta >= precio) {
+      setError('El precio de oferta debe ser menor al precio normal.')
       return
     }
 
@@ -141,8 +160,11 @@ export default function ProductoForm({ inicial, onGuardar, onCancelar, guardando
       nombre,
       descripcion: form.descripcion.trim() || null,
       precio,
+      precio_oferta: precioOferta,
       categoria,
+      coleccion: form.coleccion.trim() || null,
       material: form.material.trim() || null,
+      color: form.color.trim() || null,
       talla: form.talla.trim() || null,
       existencias,
       disponible: Boolean(form.disponible),
@@ -215,12 +237,42 @@ export default function ProductoForm({ inicial, onGuardar, onCancelar, guardando
       </div>
 
       <div>
+        <label className="vooj-label" htmlFor="f-precio-oferta">
+          Precio de oferta (opcional)
+        </label>
+        <input
+          id="f-precio-oferta"
+          type="number"
+          min="0"
+          step="0.01"
+          inputMode="decimal"
+          className="vooj-input"
+          value={form.precio_oferta}
+          onChange={(e) => set('precio_oferta', e.target.value)}
+        />
+        <p className="mt-1.5 text-[0.7rem] text-vooj-ink/45 tracking-wide2">
+          Si se llena, debe ser menor al precio normal
+        </p>
+      </div>
+
+      <div>
         <label className="vooj-label" htmlFor="f-categoria">Categoría</label>
         <input
           id="f-categoria"
           className="vooj-input"
           value={form.categoria}
           onChange={(e) => set('categoria', e.target.value)}
+        />
+      </div>
+
+      <div>
+        <label className="vooj-label" htmlFor="f-coleccion">Colección (opcional)</label>
+        <input
+          id="f-coleccion"
+          className="vooj-input"
+          placeholder="Primavera 2026…"
+          value={form.coleccion}
+          onChange={(e) => set('coleccion', e.target.value)}
         />
       </div>
 
@@ -232,6 +284,17 @@ export default function ProductoForm({ inicial, onGuardar, onCancelar, guardando
           placeholder="Algodón, lino…"
           value={form.material}
           onChange={(e) => set('material', e.target.value)}
+        />
+      </div>
+
+      <div>
+        <label className="vooj-label" htmlFor="f-color">Color (opcional)</label>
+        <input
+          id="f-color"
+          className="vooj-input"
+          placeholder="Beige, negro…"
+          value={form.color}
+          onChange={(e) => set('color', e.target.value)}
         />
       </div>
 

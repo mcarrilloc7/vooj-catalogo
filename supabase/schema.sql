@@ -123,3 +123,27 @@ create policy "vooj-fotos: delete para autenticados"
 --   to authenticated
 --   using (true);
 -- ============================================================================
+
+-- ============================================================================
+-- NOTA: esta CREATE TABLE de arriba quedó desactualizada — `sku` y
+-- `material` ya existen en la base (agregadas a mano, sin quedar
+-- documentadas acá) y no aparecen en la definición de la sección 1.
+-- ============================================================================
+
+-- ----------------------------------------------------------------------------
+-- 4. Nuevas columnas: color, precio_oferta, colección
+--    Las tres opcionales. precio_oferta, cuando existe, debe ser menor al
+--    precio normal — se refuerza con un check constraint (no sólo en el
+--    formulario del admin).
+-- ----------------------------------------------------------------------------
+alter table public.productos
+  add column if not exists color text,
+  add column if not exists precio_oferta numeric,
+  add column if not exists coleccion text;
+
+alter table public.productos
+  drop constraint if exists productos_precio_oferta_menor_precio;
+
+alter table public.productos
+  add constraint productos_precio_oferta_menor_precio
+  check (precio_oferta is null or precio_oferta < precio);
