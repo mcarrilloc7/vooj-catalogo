@@ -29,6 +29,13 @@ export default function Home() {
       <section>
         <CategoriaCirculos />
       </section>
+
+      {/* Lema de marca, cierre de la home */}
+      <section>
+        <p className="vooj-wordmark text-center text-xs text-vooj-ink/45 sm:text-sm">
+          Pocas piezas, bien elegidas
+        </p>
+      </section>
     </div>
   )
 }

@@ -3,7 +3,7 @@
  * (en móvil se apilan debajo). Estilo "bloques de departamento".
  *
  *  - titulo: etiqueta corta.
- *  - sub:    línea de apoyo opcional (o null).
+ *  - sub:    tagline de 3 a 5 palabras (o null).
  *  - href:   destino.
  *            '/catalogo'                     -> todo, ordenado por lo más reciente
  *            '/catalogo?categoria=Blusas'    -> esa categoría ya filtrada
@@ -16,29 +16,39 @@ export const panelesHome = {
     {
       id: 'novedades',
       titulo: 'Novedades',
-      sub: 'Lo último que llegó',
+      sub: 'Lo que acaba de llegar',
       href: '/catalogo',
     },
-    { id: 'blusas', titulo: 'Blusas', sub: null, href: '/catalogo?categoria=Blusas' },
-    { id: 'faldas', titulo: 'Faldas', sub: null, href: '/catalogo?categoria=Faldas' },
+    {
+      id: 'blusas',
+      titulo: 'Blusas',
+      sub: 'Telas nobles, cortes limpios',
+      href: '/catalogo?categoria=Blusas',
+    },
+    {
+      id: 'faldas',
+      titulo: 'Faldas',
+      sub: 'La caída importa',
+      href: '/catalogo?categoria=Faldas',
+    },
   ],
   derecha: [
     {
       id: 'pantalones',
       titulo: 'Pantalones',
-      sub: null,
+      sub: 'Mezclilla de todos los días',
       href: '/catalogo?categoria=Pantalones',
     },
     {
       id: 'chamarras',
       titulo: 'Chamarras',
-      sub: null,
+      sub: 'Capas para el frío',
       href: '/catalogo?categoria=Chamarras',
     },
     {
       id: 'deportivo',
       titulo: 'Deportivo',
-      sub: 'Para moverte',
+      sub: 'Comodidad que se ve bien',
       href: '/catalogo?categoria=Deportivo',
     },
   ],

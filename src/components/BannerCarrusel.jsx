@@ -31,6 +31,9 @@ function Slide({ slide }) {
       )}
 
       <div className="relative flex h-full flex-col items-start justify-end gap-2 p-6 text-vooj-bone sm:p-10">
+        {slide.eyebrow && (
+          <p className="vooj-eyebrow text-vooj-bone/55">{slide.eyebrow}</p>
+        )}
         <h2 className="vooj-wordmark text-2xl text-vooj-bone sm:text-3xl">
           {slide.titulo}
         </h2>
