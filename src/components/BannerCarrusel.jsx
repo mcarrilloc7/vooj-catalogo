@@ -47,7 +47,7 @@ function Slide({ slide, foto }) {
         {slide.texto && (
           <p className="max-w-sm text-sm text-vooj-bone/70">{slide.texto}</p>
         )}
-        <span className="mt-3 inline-block border border-vooj-bone/60 px-4 py-2 vooj-eyebrow text-vooj-bone transition-colors group-hover:bg-vooj-bone group-hover:text-vooj-black">
+        <span className="mt-3 inline-block border border-vooj-bone/70 px-7 py-3.5 vooj-eyebrow text-sm text-vooj-bone transition-colors group-hover:bg-vooj-bone group-hover:text-vooj-black">
           {slide.cta}
         </span>
       </div>

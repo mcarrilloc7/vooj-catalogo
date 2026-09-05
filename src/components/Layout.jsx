@@ -1,6 +1,5 @@
 import { useState } from 'react'
 import { NavLink, Link, Outlet } from 'react-router-dom'
-import VoojBadge from './VoojBadge.jsx'
 
 const navItems = [
   { to: '/catalogo', label: 'Catálogo' },
@@ -22,14 +21,29 @@ export default function Layout() {
     <div className="min-h-screen bg-vooj-bone text-vooj-ink flex flex-col">
       {/* Barra negra sólida a todo el ancho */}
       <header className="relative bg-vooj-black text-vooj-bone">
-        <div className="w-full px-6 h-16 flex items-center justify-between">
+        <div className="w-full px-6 py-2 flex items-center justify-between">
           <Link
             to="/"
             onClick={() => setAbierto(false)}
             aria-label="VOOJ — inicio"
             className="shrink-0"
           >
-            <VoojBadge variant="full" className="h-14" />
+            {/* El lockup completo (logo-vooj.jpg) trae mucho aire arriba y
+                abajo del wordmark dentro de su lienzo cuadrado — acá se
+                recorta a mano para que sólo se vea la banda de las letras,
+                a sangre en el header. `mix-blend-lighten` funde el negro
+                puro del archivo con el bg-vooj-black del header (un tono
+                distinto) para que no se note como un sello con su propio
+                recuadro; el tratamiento de sello completo se mantiene donde
+                sí corresponde (home, login, tarjeta de /catalogo). */}
+            <div className="h-[42px] w-[165px] overflow-hidden sm:h-14 sm:w-[220px]">
+              <img
+                src="/logo-vooj.jpg"
+                alt=""
+                draggable={false}
+                className="block w-[165px] h-auto select-none mix-blend-lighten -mt-14 sm:w-[220px] sm:-mt-[75px]"
+              />
+            </div>
           </Link>
 
           {/* Navegación en desktop */}
