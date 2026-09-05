@@ -1,10 +1,19 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { supabase } from '../lib/supabase.js'
 import { primeraFoto } from '../lib/format.js'
 import ProductoCard from '../components/ProductoCard.jsx'
 import FiltrosCatalogo from '../components/FiltrosCatalogo.jsx'
 import CategoriaFila from '../components/CategoriaFila.jsx'
+
+const POR_PAGINA = 16
+
+const ORDENES = [
+  { valor: 'recomendados', etiqueta: 'Recomendados' },
+  { valor: 'nuevos', etiqueta: 'Más nuevos' },
+  { valor: 'precio_asc', etiqueta: 'Precio: menor a mayor' },
+  { valor: 'precio_desc', etiqueta: 'Precio: mayor a menor' },
+]
 
 // Auto-fill en vez de columnas fijas por breakpoint: desde que hay sidebar
 // (lg+), el grid ya no es todo el ancho de la página, así que un conteo de
@@ -24,8 +33,12 @@ const BANDA = 'col-span-full'
 //    apaisadas apiladas.
 //  - A partir de ahí, grid normal; cada ~7 una banda a todo el ancho
 //    marca el ritmo.
-function Rejilla({ productos }) {
-  const conDestacado = productos.length >= 3
+// Sólo tiene sentido cuando el orden es por recencia ("recomendados" hoy
+// es lo mismo que "más nuevos"): con precio asc/desc, `destacar=false`
+// evita presentar los 3 productos más baratos/caros como si fueran
+// "recién llegados".
+function Rejilla({ productos, destacar }) {
+  const conDestacado = destacar && productos.length >= 3
   const destacado = conDestacado ? productos.slice(0, 3) : []
   const resto = conDestacado ? productos.slice(3) : productos
   const base = conDestacado ? 3 : 0
@@ -129,13 +142,80 @@ function EstadoError({ onReintentar }) {
   )
 }
 
+// Números de página a mostrar: siempre 1 y la última, más una ventana
+// alrededor de la actual; el resto colapsa en "…". Con pocas páginas
+// (el caso de hoy) esto no recorta nada — está pensado para cuando el
+// catálogo real crezca y haya, por ejemplo, 20 páginas.
+function rangoPaginas(actual, total) {
+  const rango = []
+  for (let i = 1; i <= total; i++) {
+    if (i === 1 || i === total || Math.abs(i - actual) <= 1) {
+      rango.push(i)
+    } else if (rango[rango.length - 1] !== '…') {
+      rango.push('…')
+    }
+  }
+  return rango
+}
+
+function Paginacion({ pagina, total, onCambiar }) {
+  if (total <= 1) return null
+
+  return (
+    <nav aria-label="Paginación" className="mt-16 flex items-center justify-center gap-1">
+      <button
+        type="button"
+        onClick={() => onCambiar(pagina - 1)}
+        disabled={pagina === 1}
+        aria-label="Página anterior"
+        className="px-2 py-1 text-vooj-ink/60 transition-colors hover:text-vooj-ink disabled:opacity-25 disabled:hover:text-vooj-ink/60"
+      >
+        ‹
+      </button>
+
+      {rangoPaginas(pagina, total).map((n, i) =>
+        n === '…' ? (
+          <span key={`ellipsis-${i}`} className="px-2 text-sm text-vooj-ink/35">
+            …
+          </span>
+        ) : (
+          <button
+            key={n}
+            type="button"
+            onClick={() => onCambiar(n)}
+            aria-current={n === pagina ? 'page' : undefined}
+            className={`h-8 w-8 text-sm font-light transition-colors ${
+              n === pagina
+                ? 'text-vooj-ink underline decoration-2 underline-offset-4'
+                : 'text-vooj-ink/45 hover:text-vooj-ink'
+            }`}
+          >
+            {n}
+          </button>
+        ),
+      )}
+
+      <button
+        type="button"
+        onClick={() => onCambiar(pagina + 1)}
+        disabled={pagina === total}
+        aria-label="Página siguiente"
+        className="px-2 py-1 text-vooj-ink/60 transition-colors hover:text-vooj-ink disabled:opacity-25 disabled:hover:text-vooj-ink/60"
+      >
+        ›
+      </button>
+    </nav>
+  )
+}
+
 const unicos = (lista) => [...new Set(lista.filter(Boolean))].sort()
 
 export default function Catalogo() {
   const [estado, setEstado] = useState('cargando') // 'cargando' | 'ok' | 'error'
   const [productos, setProductos] = useState([])
-  const [params] = useSearchParams()
+  const [params, setParams] = useSearchParams()
   const [filtrosAbiertos, setFiltrosAbiertos] = useState(false)
+  const gridRef = useRef(null)
 
   useEffect(() => {
     let cancelado = false
@@ -145,7 +225,9 @@ export default function Catalogo() {
 
       const { data, error } = await supabase
         .from('productos')
-        .select('id, sku, nombre, descripcion, precio, categoria, talla, fotos')
+        .select(
+          'id, sku, nombre, descripcion, precio, categoria, talla, color, coleccion, fotos, actualizado_en',
+        )
         .eq('disponible', true)
         .order('actualizado_en', { ascending: false })
 
@@ -183,6 +265,11 @@ export default function Catalogo() {
     [categorias, productos],
   )
   const tallas = useMemo(() => unicos(productos.map((p) => p.talla)), [productos])
+  const colores = useMemo(() => unicos(productos.map((p) => p.color)), [productos])
+  const colecciones = useMemo(
+    () => unicos(productos.map((p) => p.coleccion)),
+    [productos],
+  )
   const precios = useMemo(
     () => productos.map((p) => Number(p.precio)).filter(Number.isFinite),
     [productos],
@@ -194,8 +281,12 @@ export default function Catalogo() {
   const fQ = (params.get('q') || '').trim().toLowerCase()
   const fCategoria = params.get('categoria') || ''
   const fTalla = params.get('talla') || ''
+  const fColor = params.get('color') || ''
+  const fColeccion = params.get('coleccion') || ''
   const fMin = params.get('min') || ''
   const fMax = params.get('max') || ''
+  const fOrden = params.get('orden') || 'recomendados'
+  const fPagina = Math.max(1, parseInt(params.get('pagina') || '1', 10) || 1)
 
   const filtrados = useMemo(() => {
     const min = Number(fMin)
@@ -205,15 +296,88 @@ export default function Catalogo() {
       if (fQ && !coincide(p.nombre) && !coincide(p.descripcion)) return false
       if (fCategoria && p.categoria !== fCategoria) return false
       if (fTalla && p.talla !== fTalla) return false
+      if (fColor && p.color !== fColor) return false
+      if (fColeccion && p.coleccion !== fColeccion) return false
       const precio = Number(p.precio)
       if (fMin !== '' && Number.isFinite(min) && precio < min) return false
       if (fMax !== '' && Number.isFinite(max) && precio > max) return false
       return true
     })
-  }, [productos, fQ, fCategoria, fTalla, fMin, fMax])
+  }, [productos, fQ, fCategoria, fTalla, fColor, fColeccion, fMin, fMax])
 
-  const claveGrid = `${fQ}|${fCategoria}|${fTalla}|${fMin}|${fMax}`
-  const filtrosActivos = [fQ, fCategoria, fTalla, fMin, fMax].filter(Boolean).length
+  // Recomendados === orden de llegada (ya viene actualizado_en desc de la
+  // consulta) — "más nuevos" lo reafirma explícito en vez de asumirlo.
+  const ordenados = useMemo(() => {
+    const lista = [...filtrados]
+    switch (fOrden) {
+      case 'nuevos':
+        return lista.sort(
+          (a, b) => new Date(b.actualizado_en) - new Date(a.actualizado_en),
+        )
+      case 'precio_asc':
+        return lista.sort((a, b) => Number(a.precio) - Number(b.precio))
+      case 'precio_desc':
+        return lista.sort((a, b) => Number(b.precio) - Number(a.precio))
+      default:
+        return lista
+    }
+  }, [filtrados, fOrden])
+
+  const totalPaginas = Math.max(1, Math.ceil(ordenados.length / POR_PAGINA))
+  const paginaSegura = Math.min(fPagina, totalPaginas)
+  const productosPagina = useMemo(() => {
+    const inicio = (paginaSegura - 1) * POR_PAGINA
+    return ordenados.slice(inicio, inicio + POR_PAGINA)
+  }, [ordenados, paginaSegura])
+
+  function irAPagina(n) {
+    const next = new URLSearchParams(params)
+    if (n <= 1) next.delete('pagina')
+    else next.set('pagina', String(n))
+    setParams(next, { replace: true })
+  }
+
+  function actualizarOrden(valor) {
+    const next = new URLSearchParams(params)
+    if (valor === 'recomendados') next.delete('orden')
+    else next.set('orden', valor)
+    next.delete('pagina')
+    setParams(next, { replace: true })
+  }
+
+  const claveGrid = `${fQ}|${fCategoria}|${fTalla}|${fColor}|${fColeccion}|${fMin}|${fMax}`
+  const filtrosActivos = [fQ, fCategoria, fTalla, fColor, fColeccion, fMin, fMax].filter(
+    Boolean,
+  ).length
+
+  // Si cambia algún filtro (no el orden, ya se maneja en actualizarOrden)
+  // volvemos a la página 1 — la página 2 del recorte viejo puede no tener
+  // sentido con el resultado nuevo. Se salta el primer render para
+  // respetar un link directo a ?pagina=3.
+  const primerRenderRef = useRef(true)
+  useEffect(() => {
+    if (primerRenderRef.current) {
+      primerRenderRef.current = false
+      return
+    }
+    if (params.get('pagina')) {
+      const next = new URLSearchParams(params)
+      next.delete('pagina')
+      setParams(next, { replace: true })
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [claveGrid])
+
+  // Scroll al inicio del grid al cambiar de página (no en el primer
+  // render, para no saltar la vista en un link directo a ?pagina=3).
+  const primeraPaginaRef = useRef(true)
+  useEffect(() => {
+    if (primeraPaginaRef.current) {
+      primeraPaginaRef.current = false
+      return
+    }
+    gridRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }, [paginaSegura])
 
   const conFiltros = estado === 'ok' && productos.length > 0
 
@@ -245,14 +409,11 @@ export default function Catalogo() {
       </nav>
 
       {/* Título — ya no es el bloque negro protagonista de antes; el
-          breadcrumb de arriba y el sidebar de filtros llevan más peso. */}
-      <header className="flex items-baseline gap-3">
+          breadcrumb de arriba y el sidebar de filtros llevan más peso. El
+          contador de piezas se movió a la barra de resultados, junto al
+          orden, justo arriba del grid — no hace falta repetirlo acá. */}
+      <header>
         <h1 className="vooj-wordmark text-xl text-vooj-ink sm:text-2xl">Catálogo</h1>
-        {conFiltros && (
-          <p className="vooj-meta">
-            {filtrados.length} {filtrados.length === 1 ? 'pieza' : 'piezas'}
-          </p>
-        )}
       </header>
 
       {/* Círculos de categoría — navegación a todo el ancho, arriba tanto
@@ -314,6 +475,8 @@ export default function Catalogo() {
 
               <FiltrosCatalogo
                 tallas={tallas}
+                colores={colores}
+                colecciones={colecciones}
                 precioMin={precioMin}
                 precioMax={precioMax}
               />
@@ -321,7 +484,7 @@ export default function Catalogo() {
           </>
         )}
 
-        <div>
+        <div ref={gridRef} className="scroll-mt-24">
           {estado === 'cargando' && <CatalogoSkeleton />}
 
           {estado === 'error' && (
@@ -337,13 +500,48 @@ export default function Catalogo() {
 
           {conFiltros && (
             <>
-              {filtrados.length === 0 ? (
+              {/* Barra de resultados: contador + orden, arriba del grid. */}
+              <div className="mb-8 flex flex-wrap items-center justify-between gap-4">
+                <p className="vooj-meta">
+                  {ordenados.length} {ordenados.length === 1 ? 'pieza' : 'piezas'}
+                </p>
+                <label className="flex items-center gap-2">
+                  <span className="vooj-meta">ordenar por</span>
+                  <select
+                    value={fOrden}
+                    onChange={(e) => actualizarOrden(e.target.value)}
+                    className="border-0 border-b border-vooj-ink/25 bg-transparent py-1 text-sm text-vooj-ink focus:outline-none focus:border-vooj-ink/60"
+                  >
+                    {ORDENES.map((o) => (
+                      <option key={o.valor} value={o.valor}>
+                        {o.etiqueta}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              </div>
+
+              {ordenados.length === 0 ? (
                 <EstadoMensaje
                   titulo="Sin resultados"
                   detalle="Prueba con otra combinación de filtros."
                 />
               ) : (
-                <Rejilla key={claveGrid} productos={filtrados} />
+                <>
+                  <Rejilla
+                    key={`${claveGrid}|${fOrden}|${paginaSegura}`}
+                    productos={productosPagina}
+                    destacar={
+                      paginaSegura === 1 &&
+                      (fOrden === 'recomendados' || fOrden === 'nuevos')
+                    }
+                  />
+                  <Paginacion
+                    pagina={paginaSegura}
+                    total={totalPaginas}
+                    onCambiar={irAPagina}
+                  />
+                </>
               )}
             </>
           )}
