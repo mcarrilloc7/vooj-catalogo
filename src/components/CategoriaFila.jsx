@@ -69,7 +69,7 @@ export default function CategoriaFila({ categorias }) {
           desborda y el overflow-x-auto de arriba hace scroll en vez de
           apretarlos (justify-between no tiene efecto visible una vez que
           desborda: los navegadores lo tratan como flex-start ahí). */}
-      <div className="flex w-full justify-between gap-4">
+      <div className="flex w-full flex-nowrap justify-between gap-4">
         {categorias.map((c) => (
           <CirculoCategoria
             key={c.categoria}

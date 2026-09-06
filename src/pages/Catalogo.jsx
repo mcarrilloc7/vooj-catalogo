@@ -474,11 +474,8 @@ export default function Catalogo() {
 
           {conFiltros && (
             <>
-              {/* Barra de resultados: contador + orden, arriba del grid. */}
-              <div className="mb-8 flex flex-wrap items-center justify-between gap-4">
-                <p className="vooj-meta">
-                  {ordenados.length} {ordenados.length === 1 ? 'pieza' : 'piezas'}
-                </p>
+              {/* Barra de resultados: el contador ya vive junto al título, aquí solo el orden. */}
+              <div className="mb-8 flex justify-end">
                 <label className="flex items-center gap-2">
                   <span className="vooj-meta">ordenar por</span>
                   <select
