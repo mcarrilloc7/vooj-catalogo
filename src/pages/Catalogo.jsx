@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { supabase } from '../lib/supabase.js'
 import { esReciente, primeraFoto } from '../lib/format.js'
+import { mapaFotosPorHref } from '../lib/fotosHref.js'
 import ProductoCard from '../components/ProductoCard.jsx'
 import FiltrosCatalogo from '../components/FiltrosCatalogo.jsx'
 import CategoriaFila from '../components/CategoriaFila.jsx'
@@ -242,6 +243,17 @@ export default function Catalogo() {
   const fOrden = params.get('orden') || 'recomendados'
   const fPagina = Math.max(1, parseInt(params.get('pagina') || '1', 10) || 1)
 
+  // Foto del banner junto al título: la más reciente de cualquier producto
+  // sin categoría filtrada, o la 1ª foto de la categoría activa — mismo
+  // helper y mismo criterio que ya usan los paneles de home.
+  const hrefBanner = fCategoria
+    ? `/catalogo?categoria=${encodeURIComponent(fCategoria)}`
+    : '/catalogo'
+  const bannerFoto = useMemo(
+    () => mapaFotosPorHref(productos, [hrefBanner])[hrefBanner] ?? null,
+    [productos, hrefBanner],
+  )
+
   const filtrados = useMemo(() => {
     const min = Number(fMin)
     const max = Number(fMax)
@@ -362,12 +374,31 @@ export default function Catalogo() {
         )}
       </nav>
 
-      {/* Título — ya no es el bloque negro protagonista de antes; el
-          breadcrumb de arriba y el sidebar de filtros llevan más peso. El
-          contador de piezas se movió a la barra de resultados, junto al
-          orden, justo arriba del grid — no hace falta repetirlo acá. */}
-      <header>
-        <h1 className="vooj-wordmark text-xl text-vooj-ink sm:text-2xl">Catálogo</h1>
+      {/* Título + contador a la izquierda, banner editorial a la derecha
+          balanceando el espacio vacío que quedaba en el renglón — mismo
+          criterio de foto que los paneles de home (más reciente, o de la
+          categoría activa si hay un filtro). En móvil se apilan: el título
+          ya no es el bloque negro protagonista de antes, así que el banner
+          no compite con él. */}
+      <header className="flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <h1 className="vooj-wordmark text-xl text-vooj-ink sm:text-2xl">Catálogo</h1>
+          {conFiltros && (
+            <p className="vooj-meta mt-2">
+              {ordenados.length} {ordenados.length === 1 ? 'pieza' : 'piezas'}
+            </p>
+          )}
+        </div>
+
+        {bannerFoto && (
+          <div className="relative h-32 shrink-0 overflow-hidden bg-vooj-black sm:h-28 sm:flex-1 lg:h-32">
+            <img src={bannerFoto} alt="" className="h-full w-full object-cover" />
+            <span className="absolute inset-0 bg-gradient-to-t from-vooj-black/85 via-vooj-black/25 to-transparent" />
+            <p className="vooj-wordmark absolute inset-x-0 bottom-0 p-4 text-sm text-vooj-bone sm:text-base">
+              Piezas que te acompañan
+            </p>
+          </div>
+        )}
       </header>
 
       {/* Círculos de categoría — navegación a todo el ancho, arriba tanto

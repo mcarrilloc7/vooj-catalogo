@@ -63,7 +63,13 @@ export default function CategoriaFila({ categorias }) {
 
   return (
     <div role="group" aria-label="Categoría" className="overflow-x-auto pb-1 no-scrollbar">
-      <div className="flex w-max gap-4">
+      {/* w-full + justify-between: la fila ocupa todo el ancho disponible,
+          primero y último círculo tocando los bordes. gap-4 es el mínimo
+          entre ellos — si no entran a ese mínimo (móvil), el contenido
+          desborda y el overflow-x-auto de arriba hace scroll en vez de
+          apretarlos (justify-between no tiene efecto visible una vez que
+          desborda: los navegadores lo tratan como flex-start ahí). */}
+      <div className="flex w-full justify-between gap-4">
         {categorias.map((c) => (
           <CirculoCategoria
             key={c.categoria}
