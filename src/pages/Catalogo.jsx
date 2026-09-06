@@ -15,114 +15,54 @@ const ORDENES = [
   { valor: 'precio_desc', etiqueta: 'Precio: mayor a menor' },
 ]
 
-// Auto-fill en vez de columnas fijas por breakpoint: desde que hay sidebar
-// (lg+), el grid ya no es todo el ancho de la página, así que un conteo de
-// columnas fijo por viewport se apretaría contra el panel. Con minmax cada
-// tarjeta busca ~220px y el navegador acomoda cuantas entren en el espacio
-// real que quede (con o sin sidebar).
-const GRID =
-  'grid grid-cols-2 sm:grid-cols-[repeat(auto-fill,minmax(220px,1fr))] gap-x-3 sm:gap-x-6 gap-y-14'
+// Columnas fijas por breakpoint: 2 en móvil (ancho completo, sin sidebar),
+// 3 en tablet (todavía ancho completo — el sidebar recién aparece en lg),
+// 4 en desktop (lg+, ya con el sidebar de 240px restando espacio).
+// Grid uniforme: todas las tarjetas del mismo tamaño, sin excepciones por
+// posición, página u orden (antes había un héroe + banda ancha sólo en
+// página 1 con orden por recencia; se quitó para que el layout no dependa
+// de esas condiciones).
+const GRID = 'grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-x-3 sm:gap-x-6 gap-y-14'
 
-// Antes eran spans fijos por breakpoint (frágil con auto-fill, que no tiene
-// un número de columnas conocido de antemano); col-span-full es correcto
-// para cualquier cantidad de columnas.
-const BANDA = 'col-span-full'
-
-// Peso visual por recencia (sin tocar la BD):
-//  - Las 3 piezas más recientes forman una fila destacada: 1 grande + 2
-//    apaisadas apiladas.
-//  - A partir de ahí, grid normal; cada ~7 una banda a todo el ancho
-//    marca el ritmo.
-// Sólo tiene sentido cuando el orden es por recencia ("recomendados" hoy
-// es lo mismo que "más nuevos"): con precio asc/desc, `destacar=false`
-// evita presentar los 3 productos más baratos/caros como si fueran
-// "recién llegados".
 // Toda tarjeta del catálogo enlaza a la ficha de producto (/catalogo/:sku)
 // — "Ver prenda" en la tarjeta apunta acá.
-function TarjetaEnlazada({ producto, variante }) {
+function TarjetaEnlazada({ producto }) {
   return (
     <Link to={`/catalogo/${encodeURIComponent(producto.sku)}`}>
       <ProductoCard
         producto={producto}
-        variante={variante}
         etiqueta={esReciente(producto.actualizado_en) ? 'Nuevo' : null}
       />
     </Link>
   )
 }
 
-function Rejilla({ productos, destacar }) {
-  const conDestacado = destacar && productos.length >= 3
-  const destacado = conDestacado ? productos.slice(0, 3) : []
-  const resto = conDestacado ? productos.slice(3) : productos
-  const base = conDestacado ? 3 : 0
-
+function Rejilla({ productos }) {
   return (
-    <div>
-      {conDestacado && (
-        <div className="mb-14 grid grid-cols-1 gap-6 md:grid-cols-2">
-          <div className="animate-fade-up">
-            <TarjetaEnlazada producto={destacado[0]} variante="hero" />
-          </div>
-          <div className="flex flex-col justify-between gap-6">
-            {destacado.slice(1).map((p, k) => (
-              <div
-                key={p.id}
-                className="animate-fade-up"
-                style={{ animationDelay: `${(k + 1) * 45}ms` }}
-              >
-                <TarjetaEnlazada producto={p} variante="ancho" />
-              </div>
-            ))}
-          </div>
+    <div className={GRID}>
+      {productos.map((p, k) => (
+        <div
+          key={p.id}
+          className="animate-fade-up"
+          style={{ animationDelay: `${Math.min(k * 25, 250)}ms` }}
+        >
+          <TarjetaEnlazada producto={p} />
         </div>
-      )}
-
-      <div className={GRID}>
-        {resto.map((p, k) => {
-          const i = base + k
-          const banda = i > 0 && i % 7 === 0
-          return (
-            <div
-              key={p.id}
-              className={`animate-fade-up ${banda ? BANDA : ''}`}
-              style={{ animationDelay: `${Math.min(k * 25, 250)}ms` }}
-            >
-              <TarjetaEnlazada producto={p} variante={banda ? 'ancho' : 'normal'} />
-            </div>
-          )
-        })}
-      </div>
+      ))}
     </div>
   )
 }
 
 function CatalogoSkeleton() {
   return (
-    <div aria-hidden="true">
-      <div className="mb-14 grid grid-cols-1 gap-6 md:grid-cols-2">
-        <div className="animate-pulse">
-          <div className="aspect-[4/5] bg-vooj-ink/[0.07]" />
-          <div className="mt-4 h-3 w-1/2 bg-vooj-ink/[0.07]" />
+    <div aria-hidden="true" className={GRID}>
+      {Array.from({ length: 8 }).map((_, i) => (
+        <div key={i} className="animate-pulse">
+          <div className="aspect-[3/4] bg-vooj-ink/[0.07]" />
+          <div className="mt-4 h-3 w-2/3 bg-vooj-ink/[0.07]" />
+          <div className="mt-2 h-3 w-1/3 bg-vooj-ink/[0.07]" />
         </div>
-        <div className="flex flex-col justify-between gap-6">
-          {[0, 1].map((k) => (
-            <div key={k} className="animate-pulse">
-              <div className="aspect-[3/2] bg-vooj-ink/[0.07]" />
-              <div className="mt-4 h-3 w-1/2 bg-vooj-ink/[0.07]" />
-            </div>
-          ))}
-        </div>
-      </div>
-      <div className={GRID}>
-        {Array.from({ length: 4 }).map((_, i) => (
-          <div key={i} className="animate-pulse">
-            <div className="aspect-[3/4] bg-vooj-ink/[0.07]" />
-            <div className="mt-4 h-3 w-2/3 bg-vooj-ink/[0.07]" />
-            <div className="mt-2 h-3 w-1/3 bg-vooj-ink/[0.07]" />
-          </div>
-        ))}
-      </div>
+      ))}
     </div>
   )
 }
@@ -534,10 +474,6 @@ export default function Catalogo() {
                   <Rejilla
                     key={`${claveGrid}|${fOrden}|${paginaSegura}`}
                     productos={productosPagina}
-                    destacar={
-                      paginaSegura === 1 &&
-                      (fOrden === 'recomendados' || fOrden === 'nuevos')
-                    }
                   />
                   <Paginacion
                     pagina={paginaSegura}
